@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
-import Input from "../input/Input";
-import useLoginModal from "@/app/hooks/useLoginModal";
-import useRegisterModal from "@/app/hooks/useRegisterModal";
+import Input from "../ui/Input";
+import useLoginModal from "@/hooks/useLoginModal";
+import useRegisterModal from "@/hooks/useRegisterModal";
 import Modal from "./Model";
 
 const RegisterModal = () => {

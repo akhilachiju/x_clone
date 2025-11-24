@@ -1,10 +1,10 @@
 "use client"
 import "./globals.css";
 //import type { Metadata } from "next";
-import LeftBar from "./components/layouts/LeftBar";
-import RightBar from "./components/layouts/RightBar";
-import LoginModal from "./components/model/LoginModal";
-import RegisterModal from "./components/model/RegisterModal";
+import LeftBar from "../components/layouts/LeftBar";
+import RightBar from "../components/layouts/RightBar";
+import LoginModal from "../components/model/LoginModal";
+import RegisterModal from "../components/model/RegisterModal";
 
 /*export const metadata: Metadata = {
   title: "X Clone",

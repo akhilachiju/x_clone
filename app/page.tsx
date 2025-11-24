@@ -1,7 +1,8 @@
 "use client";
 
+import Share from "@/components/layouts/Share";
 import { useState } from "react";
-import Share from "./components/layouts/Share";
+
 
 const Homepage = () => {
   // State for active tab
