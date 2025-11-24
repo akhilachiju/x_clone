@@ -1,3 +1,5 @@
+"use client";
+
 import { useCallback, useState } from "react";
 import Input from "../ui/Input";
 import useLoginModal from "@/hooks/useLoginModal";
