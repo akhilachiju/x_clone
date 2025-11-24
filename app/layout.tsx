@@ -1,12 +1,15 @@
+"use client"
 import "./globals.css";
-import type { Metadata } from "next";
+//import type { Metadata } from "next";
 import LeftBar from "./components/layouts/LeftBar";
 import RightBar from "./components/layouts/RightBar";
+import LoginModal from "./components/model/LoginModal";
+import RegisterModal from "./components/model/RegisterModal";
 
-export const metadata: Metadata = {
+/*export const metadata: Metadata = {
   title: "X Clone",
   description: "Next.js X clone application project",
-};
+};*/
 
 export default function RootLayout({
   children,
@@ -17,6 +20,8 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <div className="max-w-3xl lg:max-w-screen-5xl xl:max-w-screen-7xl mx-auto flex justify-between">
+          <RegisterModal />
+          <LoginModal />
           <div className="px-2 sm:px-2 2xl:px-8">
             <LeftBar />
           </div>
