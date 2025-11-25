@@ -72,7 +72,7 @@ const Recommendations = () => {
         </button>
       </div>
 
-      <Link href="/" className="text-blue-400 text-sm">
+      <Link href="/" className="text-sky-500 hover:text-sky-600 text-sm transition-colors">
         Show More
       </Link>
     </div>

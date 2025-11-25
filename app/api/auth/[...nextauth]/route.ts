@@ -41,6 +41,20 @@ export const authOptions: AuthOptions = {
       },
     }),
   ],
+  callbacks: {
+    session: async ({ session, token }) => {
+      if (session?.user?.email) {
+        const user = await prisma.user.findUnique({
+          where: { email: session.user.email },
+        });
+        if (user) {
+          session.user.image = user.profileImage || user.image;
+          session.user.name = user.name;
+        }
+      }
+      return session;
+    },
+  },
   debug: process.env.NODE_ENV === "development",
   session: {
     strategy: "jwt",

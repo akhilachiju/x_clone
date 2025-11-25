@@ -14,7 +14,7 @@ const SubscribePremium = () => {
       {/* SUBSCRIBE BUTTON */}
       <Link
         href="/subscribe"
-        className="self-start py-2 px-4 bg-blue-400 text-white font-semibold rounded-full hover:bg-blue-500 transition"
+        className="self-start py-2 px-4 bg-sky-500 text-white font-semibold rounded-full hover:bg-sky-600 transition-colors"
       >
         Subscribe
       </Link>

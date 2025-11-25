@@ -58,7 +58,7 @@ const Modal: React.FC<ModalProps> = ({
         z-50
         outline-none
         focus:outline-none
-        bg-neutral-800
+        bg-black
         bg-opacity-70
       "
     >
@@ -66,19 +66,23 @@ const Modal: React.FC<ModalProps> = ({
         className="
           relative
           w-full
+          sm:w-5/6
+          md:w-4/6
           lg:w-3/6
+          xl:w-2/6
           my-6
           mx-auto
-          lg:max-w-3xl
+          max-w-lg
           h-full
-          lg:h-auto
+          sm:h-auto
         "
       >
         <div
           className="
             h-full
-            lg:h-auto
-            border-0
+            sm:h-auto
+            border
+            border-neutral-800
             rounded-lg
             shadow-lg
             relative
@@ -96,11 +100,13 @@ const Modal: React.FC<ModalProps> = ({
               flex
               items-center
               justify-between
-              p-10
+              p-4
+              sm:p-6
+              md:p-8
               rounded-t
             "
           >
-            <h3 className="text-3xl font-semibold text-white">{title}</h3>
+            <h3 className="text-xl sm:text-2xl md:text-3xl font-semibold text-white">{title}</h3>
             <button
               onClick={handleClose}
               className="
@@ -117,10 +123,10 @@ const Modal: React.FC<ModalProps> = ({
           </div>
 
           {/* Body */}
-          <div className="relative p-10 flex-auto">{body}</div>
+          <div className="relative p-4 sm:p-6 md:p-8 flex-auto">{body}</div>
 
           {/* Footer */}
-          <div className="flex flex-col gap-2 p-10">
+          <div className="flex flex-col gap-2 p-4 sm:p-6 md:p-8">
             <Button
               disabled={disabled}
               label={actionLabel}

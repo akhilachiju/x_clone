@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
+import { useSession } from "next-auth/react";
 
 // Type for post settings
 type ShareSettings = {
@@ -16,6 +17,7 @@ const shareAction = async (formData: FormData, settings: ShareSettings) => {
 
 const Share = () => {
   const [desc, setDesc] = useState("");
+  const { data: session } = useSession();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -33,14 +35,20 @@ const Share = () => {
   return (
     <form className="p-4 flex gap-4" onSubmit={handleSubmit}>
       {/* AVATAR */}
-      <div className="relative w-10 h-10 rounded-full overflow-hidden">
-        <Image
-          src="/general/avatar_1.png"
-          alt="avatar"
-          width={40}
-          height={40}
-          className="rounded-full object-cover"
-        />
+      <div className="w-10 h-10 relative rounded-full overflow-hidden bg-gray-600 flex items-center justify-center">
+        {session?.user?.image ? (
+          <Image
+            src={session.user.image}
+            alt={session?.user?.name || "User"}
+            width={40}
+            height={40}
+            className="object-cover"
+          />
+        ) : (
+          <span className="text-white font-bold text-lg">
+            {session?.user?.name?.charAt(0)?.toUpperCase() || "U"}
+          </span>
+        )}
       </div>
 
       {/* INPUT + ACTIONS */}
@@ -51,11 +59,11 @@ const Share = () => {
           placeholder="What's happening?"
           value={desc}
           onChange={(e) => setDesc(e.target.value)}
-          className="bg-transparent outline-none placeholder:text-gray-500 text-xl w-full"
+          className="bg-transparent outline-none placeholder:text-gray-500 text-xl w-full mt-1.5"
         />
 
         {/* ICONS ROW */}
-        <div className="flex items-center justify-between flex-wrap gap-4">
+        <div className="flex items-center justify-between flex-wrap gap-4 mt-1.5">
           <div className="flex gap-4 flex-wrap">
             <Image src="/icons/image.svg" alt="Image" width={20} height={20} className="cursor-pointer" />
             <Image src="/icons/gif.svg" alt="GIF" width={20} height={20} className="cursor-pointer" />

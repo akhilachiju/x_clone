@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { signIn } from "next-auth/react";
+import { toast } from "react-hot-toast";
 import Input from "../ui/Input";
 import useLoginModal from "@/hooks/useLoginModal";
 import useRegisterModal from "@/hooks/useRegisterModal";
@@ -24,14 +26,25 @@ const LoginModal = () => {
   const onSubmit = useCallback(async () => {
     try {
       setIsLoading(true);
-       // login 
-      loginModal.onClose();
+      
+      const result = await signIn('credentials', {
+        email,
+        password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        toast.error('Invalid credentials');
+      } else {
+        toast.success('Logged in');
+        loginModal.onClose();
+      }
     } catch (error) {
-      console.log(error);
+      toast.error('Something went wrong');
     } finally {
       setIsLoading(false);
     }
-  }, [loginModal]);
+  }, [email, password, loginModal]);
 
   const bodyContent = (
     <div className="flex flex-col gap-4">
@@ -43,6 +56,7 @@ const LoginModal = () => {
       />
       <Input
         placeholder="Password"
+        type="password"
         onChange={(e) => setPassword(e.target.value)}
         value={password}
         disabled={isLoading}
