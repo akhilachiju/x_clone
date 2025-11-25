@@ -58,7 +58,7 @@ const Share = () => {
           name="desc"
           placeholder="What's happening?"
           value={desc}
-          onChange={(e) => setDesc(e.target.value)}
+          onChange={(e) => setDesc(e.target.value)} 
           className="bg-transparent outline-none placeholder:text-gray-500 text-xl w-full mt-1.5"
         />
 

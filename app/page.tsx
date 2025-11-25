@@ -17,7 +17,7 @@ const Homepage = () => {
             onClick={() => setActiveTab("for-you")}
             className={`pb-3 flex items-center ${
               activeTab === "for-you"
-                ? "text-neutral-300 border-b-4 border-x-blue"
+                ? "text-neutral-300 border-b-4 border-sky-500"
                 : "text-neutral-500"
             }`}
           >
@@ -31,7 +31,7 @@ const Homepage = () => {
             onClick={() => setActiveTab("following")}
             className={`pb-3 flex items-center ${
               activeTab === "following"
-                ? "text-neutral-300 border-b-4 border-x-blue"
+                ? "text-neutral-300 border-b-4 border-sky-500"
                 : "text-neutral-500"
             }`}
           >

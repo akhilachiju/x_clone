@@ -27,6 +27,17 @@ const LoginModal = () => {
     try {
       setIsLoading(true);
       
+      // Validation
+      if (!email || !password) {
+        toast.error('Email and password are required');
+        return;
+      }
+      
+      if (!email.includes('@')) {
+        toast.error('Please enter a valid email');
+        return;
+      }
+      
       const result = await signIn('credentials', {
         email,
         password,
@@ -39,7 +50,7 @@ const LoginModal = () => {
         toast.success('Logged in');
         loginModal.onClose();
       }
-    } catch (error) {
+    } catch {
       toast.error('Something went wrong');
     } finally {
       setIsLoading(false);
@@ -65,17 +76,17 @@ const LoginModal = () => {
   );
 
   const footerContent = (
-    <div className="text-neutral-400 text-center mt-4">
+    <div className="text-neutral-400 text-start mt-4">
       <p>
-        First time user?
+        Don&apos;t have an account ?
         <span
         onClick={onToggle}
           className="
-        text-white
+        text-sky-500
         cursor-pointer
         hover:underline
       "
-        > Create an account
+        > Sign up
         </span>
       </p>
     </div>
@@ -86,7 +97,7 @@ const LoginModal = () => {
       <Modal
       disabled={isLoading}
         isOpen={loginModal.isOpen}
-        title="Login"
+        title="Sign in to x"
         actionLabel="Sign in"
         onClose={loginModal.onClose}
         onSubmit={onSubmit}

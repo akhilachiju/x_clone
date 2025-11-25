@@ -1,5 +1,6 @@
 import React, { useCallback } from "react";
 import { AiOutlineClose } from "react-icons/ai"; 
+import Image from "next/image";
 import Button from "../ui/Button";
 
 
@@ -99,31 +100,49 @@ const Modal: React.FC<ModalProps> = ({
             className="
               flex
               items-center
-              justify-between
+              justify-center
               p-4
               sm:p-6
               md:p-8
               rounded-t
+              relative
             "
           >
-            <h3 className="text-xl sm:text-2xl md:text-3xl font-semibold text-white">{title}</h3>
             <button
               onClick={handleClose}
               className="
-                p-1
-                ml-auto
-                border-0
+                absolute
+                left-4
+                sm:left-6
+                md:left-8
+                p-2
+                rounded-full
+                hover:bg-neutral-800
                 text-white
-                hover:opacity-70
                 transition
               "
             >
               <AiOutlineClose size={20} />
             </button>
+            
+            <div className="w-8 h-8">
+              <Image
+                src="/icons/logo_2.png"
+                alt="X Logo"
+                width={32}
+                height={32}
+                className="w-full h-full object-contain"
+              />
+            </div>
           </div>
 
           {/* Body */}
-          <div className="relative p-4 sm:p-6 md:p-8 flex-auto">{body}</div>
+          <div className="relative p-4 sm:p-6 md:p-8 flex-auto">
+            {title && (
+              <h2 className="text-3xl font-bold text-white mb-6 text-left">{title}</h2>
+            )}
+            {body}
+          </div>
 
           {/* Footer */}
           <div className="flex flex-col gap-2 p-4 sm:p-6 md:p-8">

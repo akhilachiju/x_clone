@@ -26,6 +26,11 @@ export default function RootLayout({
             position="top-right"
             toastOptions={{
               duration: 4000,
+              style: {
+                background: '#000000',
+                color: '#ffffff',
+                border: '1px solid #525252',
+              },
             }}
           />
           <RegisterModal />

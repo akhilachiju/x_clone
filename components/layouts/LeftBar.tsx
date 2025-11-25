@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { signOut, useSession } from "next-auth/react";
 import { BiLogOut } from "react-icons/bi";
+import toast from "react-hot-toast";
 
 const menuList = [
   {
@@ -62,7 +63,12 @@ const LeftBar = () => {
           ))}
           {/* LOGOUT */}
           <button
-            onClick={() => signOut()}
+            onClick={() => {
+              toast.success('Logged out successfully');
+              setTimeout(() => {
+                signOut();
+              }, 800);
+            }}
             className="p-2 rounded-full hover:bg-[#181818] flex items-center gap-4"
           >
             <BiLogOut size={28} />
