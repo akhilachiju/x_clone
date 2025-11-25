@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Search from "./Search";
-import Recommendations from "./Recommendations";
+import WhoToFollow from "../profile/WhoToFollow";
 import SubscribePremium from "./Subscribe";
 
 const links = [
@@ -16,7 +16,7 @@ const RightBar = () => {
     <div className="pt-1.5 flex flex-col gap-4 sticky top-0 h-max">
       <Search />
       <SubscribePremium />
-      <Recommendations />
+      <WhoToFollow />
       <div className="text-neutral-500 text-xs pl-8 flex flex-wrap gap-x-2">
         {links.map((link, index) => (
           <span key={link.name} className="flex items-center gap-x-2">

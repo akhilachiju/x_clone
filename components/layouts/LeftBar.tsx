@@ -6,35 +6,35 @@ import { signOut, useSession } from "next-auth/react";
 import { BiLogOut } from "react-icons/bi";
 import toast from "react-hot-toast";
 
-const menuList = [
-  {
-    id: 1,
-    name: "Home",
-    link: "/",
-    icon: "home.svg",
-  },
-  {
-    id: 3,
-    name: "Notifications",
-    link: "/",
-    icon: "notification.svg",
-  },
-   {
-     id: 9,
-     name: "Premium",
-     link: "/",
-     icon: "logo_2.png",
-   },
-  {
-    id: 10,
-    name: "Profile",
-    link: "/",
-    icon: "profile.svg",
-  },
-];
-
 const LeftBar = () => {
   const { data: session } = useSession();
+
+  const menuList = [
+    {
+      id: 1,
+      name: "Home",
+      link: "/",
+      icon: "home.svg",
+    },
+    {
+      id: 3,
+      name: "Notifications",
+      link: "/",
+      icon: "notification.svg",
+    },
+     {
+       id: 9,
+       name: "Premium",
+       link: "/",
+       icon: "logo_2.png",
+     },
+    {
+      id: 10,
+      name: "Profile",
+      link: `/${session?.user?.email?.split('@')[0] || 'profile'}`,
+      icon: "profile.svg",
+    },
+  ];
 
   return (
     <div className="h-screen sticky top-0 flex flex-col justify-between pb-2">
@@ -67,7 +67,7 @@ const LeftBar = () => {
               toast.success('Logged out successfully');
               setTimeout(() => {
                 signOut();
-              }, 800);
+              }, 500);
             }}
             className="p-2 rounded-full hover:bg-[#181818] flex items-center gap-4"
           >
@@ -84,13 +84,13 @@ const LeftBar = () => {
         </Link>
         <Link
           href="/compose/post"
-          className="hidden xl:block bg-white text-black rounded-full font-bold text-sm py-4 px-25"
+          className="hidden xl:block bg-white text-black rounded-full font-bold text-sm py-4 px-25 hover:bg-gray-200"
         >
           Post
         </Link>
       </div>
       {/* USER */}
-      <div className="flex items-center justify-between xl:justify-start w-full p-2">
+      <div className="flex items-center justify-between xl:justify-start w-full rounded-full hover:bg-[#181818] p-2">
         <div className="flex items-center gap-2">
           <div className="w-10 h-10 relative rounded-full overflow-hidden bg-gray-600 flex items-center justify-center">
             {session?.user?.image ? (
@@ -112,6 +112,7 @@ const LeftBar = () => {
             <span className="text-sm text-neutral-500">@{session?.user?.email?.split('@')[0]}</span>
           </div>
         </div>
+        <div className="hidden xl:block cursor-pointer font-bold pl-10">...</div>
       </div>
     </div>
   );
