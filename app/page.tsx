@@ -3,14 +3,12 @@
 import Share from "@/components/layouts/Share";
 import { useState } from "react";
 
-
 const Homepage = () => {
-  // State for active tab
   const [activeTab, setActiveTab] = useState<"for-you" | "following">("for-you");
 
   return (
     <div>
-      <div className=" flex justify-center font-semibold border-b border-b-neutral-800">
+      <div className="flex justify-center font-semibold border-b border-b-neutral-800">
         {/* TAB 1: FOR YOU */}
         <div className="flex-1 flex justify-center px-4 pt-4 hover:bg-[#181818]">
           <button
@@ -59,8 +57,6 @@ const Homepage = () => {
           </p>
           <button className="bg-sky-500 text-white px-8 py-3 rounded-full font-semibold hover:bg-sky-600 transition-colors">
             Let&apos;s go!
-
-            
           </button>
         </div>
       )}  

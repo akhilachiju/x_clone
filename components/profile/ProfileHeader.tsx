@@ -30,7 +30,7 @@ export default function ProfileHeader({ displayName, activeTab }: ProfileHeaderP
   };
 
   return (
-    <div className="sticky top-0 bg-black/80 backdrop-blur-md border-b border-neutral-800 flex items-center justify-between px-4 py-3">
+    <div className="sticky top-0 z-50 bg-black/80 backdrop-blur-md border-b border-neutral-800 flex items-center justify-between px-4 py-3">
       <div className="flex items-center gap-8">
         <Link href="/" className="p-2 rounded-full hover:bg-neutral-900 transition-colors">
           <IoArrowBack size={20} />

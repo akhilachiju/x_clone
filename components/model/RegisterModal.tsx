@@ -35,7 +35,7 @@ const RegisterModal = () => {
         username,
         name
       })
-      toast.success('Account created.');
+      toast.success('Account created successfully.');
       signIn('credentials', {
         email,
         password
@@ -43,7 +43,7 @@ const RegisterModal = () => {
       registerModal.onClose();
     } catch (error) {   
       console.log(error);
-      toast.error('Something went wrong');
+      toast.error('Something went wrong.');
     } finally {
       setIsLoading(false);
     }

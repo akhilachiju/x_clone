@@ -13,6 +13,7 @@ interface User {
   username: string;
   email: string;
   image?: string;
+  bio?: string;
 }
 
 interface WhoToFollowProps {
@@ -21,6 +22,7 @@ interface WhoToFollowProps {
   limit?: number;
   className?: string;
   compact?: boolean;
+  showBio?: boolean;
 }
 
 export default function WhoToFollow({
@@ -29,6 +31,7 @@ export default function WhoToFollow({
   limit = 3,
   className = "",
   compact = false,
+  showBio = false,
 }: WhoToFollowProps) {
   const { data: session } = useSession();
   const { incrementFollowing, decrementFollowing } = useFollow();
@@ -110,7 +113,7 @@ export default function WhoToFollow({
         if (response.ok) {
           const allUsers = await response.json();
           const otherUsers = allUsers.filter(
-            (user: User) => user.email !== session?.user?.email
+            (user: User) => user.email !== session?.user?.email && !user.isFollowing
           );
           setTotalUsers(otherUsers.length);
           setUsers(otherUsers.slice(0, limit));
@@ -131,7 +134,7 @@ export default function WhoToFollow({
     return (
       <div
         className={`p-4 ${
-          compact ? "" : "rounded-2xl border border-neutral-800"
+          compact ? "" : showBio ? "" : "rounded-2xl border border-neutral-800"
         } flex flex-col gap-4 ${className}`}
       >
         <h2 className="font-bold text-xl">{title}</h2>
@@ -158,7 +161,7 @@ export default function WhoToFollow({
     return (
       <div
         className={`p-4 ${
-          compact ? "" : "rounded-2xl border border-neutral-800"
+          compact ? "" : showBio ? "" : "rounded-2xl border border-neutral-800"
         } flex flex-col gap-4 ${className}`}
       >
         <h2 className="font-bold text-xl">{title}</h2>
@@ -172,7 +175,7 @@ export default function WhoToFollow({
   return (
     <div
       className={`p-4 ${
-        compact ? "" : "rounded-2xl border border-neutral-800"
+        compact ? "" : showBio ? "" : "rounded-2xl border border-neutral-800"
       } flex flex-col gap-4 ${className}`}
     >
       <h2 className="font-bold text-xl">{title}</h2>
@@ -180,11 +183,11 @@ export default function WhoToFollow({
       {users.map((user) => (
         <div
           key={user.id}
-          className={`flex items-center justify-between ${
+          className={`flex items-start justify-between mb-4 ${
             compact ? "p-3 hover:bg-neutral-900 rounded-lg" : ""
           } transition-colors`}
         >
-          <div className="flex items-center gap-3">
+          <div className="flex items-start gap-3">
             <div
               className={`w-10 h-10 rounded-full overflow-hidden flex items-center justify-center ${
                 user.image ? "bg-gray-600" : getRandomColor(user.id)
@@ -206,23 +209,35 @@ export default function WhoToFollow({
                 </span>
               )}
             </div>
-            <div>
+            <div className="flex-1">
               <h1 className="text-md font-bold">
                 {user.name || user.username}
               </h1>
               <span className="text-gray-500 text-sm">@{user.username}</span>
+              {showBio && user.bio && user.bio.trim() && (
+                <p className="text-gray-400 text-sm mt-1 overflow-hidden line-clamp-2">
+                  {user.bio}
+                </p>
+              )}
             </div>
           </div>
 
           <button 
             onClick={() => handleFollow(user.id)}
-            className={`py-1 px-4 font-semibold rounded-full transition-colors ${
+            className={`py-1 px-4 font-semibold rounded-full transition-colors group ${
               user.isFollowing 
                 ? 'bg-black border border-neutral-600 text-white hover:text-red-500 hover:border-red-500' 
                 : 'bg-white text-black hover:bg-gray-200'
             }`}
           >
-            {user.isFollowing ? 'Following' : 'Follow'}
+            <span className={user.isFollowing ? 'group-hover:hidden' : ''}>
+              {user.isFollowing ? 'Following' : 'Follow'}
+            </span>
+            {user.isFollowing && (
+              <span className="hidden group-hover:inline text-red-500">
+                Unfollow
+              </span>
+            )}
           </button>
         </div>
       ))}

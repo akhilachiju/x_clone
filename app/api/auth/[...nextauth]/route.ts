@@ -2,11 +2,9 @@ import bcrypt from "bcrypt";
 import NextAuth, { AuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
-import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import prisma from "@/lib/prismadb";
 
 export const authOptions: AuthOptions = {
-  adapter: PrismaAdapter(prisma),
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -24,9 +22,7 @@ export const authOptions: AuthOptions = {
         }
 
         const user = await prisma.user.findUnique({
-          where: {
-            email: credentials.email,
-          },
+          where: { email: credentials.email },
         });
 
         if (!user || !user.hashedPassword) {
@@ -42,30 +38,30 @@ export const authOptions: AuthOptions = {
           throw new Error("Invalid credentials");
         }
 
-        return user;
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+        };
       },
     }),
   ],
   callbacks: {
+    jwt: async ({ token, user }) => {
+      if (user) {
+        token.id = user.id;
+      }
+      return token;
+    },
     session: async ({ session, token }) => {
-      if (session?.user?.email) {
-        const user = await prisma.user.findUnique({
-          where: { email: session.user.email },
-        });
-        if (user) {
-          session.user.image = user.image;
-          session.user.name = user.name;
-        }
+      if (token) {
+        session.user.id = token.id as string;
       }
       return session;
     },
   },
-  debug: process.env.NODE_ENV === "development",
   session: {
     strategy: "jwt",
-  },
-  jwt: {
-    secret: process.env.NEXTAUTH_JWT_SECRET,
   },
   secret: process.env.NEXTAUTH_SECRET,
 };

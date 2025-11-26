@@ -29,12 +29,12 @@ const LoginModal = () => {
       
       // Validation
       if (!email || !password) {
-        toast.error('Email and password are required');
+        toast.error('Email and password are required!');
         return;
       }
       
       if (!email.includes('@')) {
-        toast.error('Please enter a valid email');
+        toast.error('Please enter a valid email!');
         return;
       }
       
@@ -45,13 +45,13 @@ const LoginModal = () => {
       });
 
       if (result?.error) {
-        toast.error('Invalid credentials');
+        toast.error('Invalid credentials!');
       } else {
-        toast.success('Logged in');
+        toast.success('Logged in successfully.');
         loginModal.onClose();
       }
     } catch {
-      toast.error('Something went wrong');
+      toast.error('Something went wrong.');
     } finally {
       setIsLoading(false);
     }
