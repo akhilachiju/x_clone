@@ -5,9 +5,52 @@ import Image from "next/image";
 import { signOut, useSession } from "next-auth/react";
 import { BiLogOut } from "react-icons/bi";
 import toast from "react-hot-toast";
+import { useState, useEffect } from "react";
 
 const LeftBar = () => {
   const { data: session } = useSession();
+  const [profileImage, setProfileImage] = useState('');
+  const [profileName, setProfileName] = useState('');
+
+  // Fetch updated profile data
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (session?.user?.email) {
+        try {
+          const response = await fetch('/api/profile');
+          if (response.ok) {
+            const userData = await response.json();
+            setProfileImage(userData.image || '');
+            setProfileName(userData.name || '');
+          }
+        } catch (error) {
+          console.error('Failed to fetch profile:', error);
+        }
+      }
+    };
+
+    fetchProfile();
+  }, [session]);
+
+  // Listen for profile updates
+  useEffect(() => {
+    const handleProfileUpdate = () => {
+      if (session?.user?.email) {
+        fetch('/api/profile')
+          .then(res => res.json())
+          .then(userData => {
+            setProfileImage(userData.image || '');
+            setProfileName(userData.name || '');
+          })
+          .catch(console.error);
+      }
+    };
+
+    window.addEventListener('profileUpdated', handleProfileUpdate);
+    return () => window.removeEventListener('profileUpdated', handleProfileUpdate);
+  }, [session]);
+
+  const displayName = profileName || session?.user?.name || "User";
 
   const menuList = [
     {
@@ -93,22 +136,21 @@ const LeftBar = () => {
       <div className="flex items-center justify-between xl:justify-start w-full rounded-full hover:bg-[#181818] p-2">
         <div className="flex items-center gap-2">
           <div className="w-10 h-10 relative rounded-full overflow-hidden bg-gray-600 flex items-center justify-center">
-            {session?.user?.image ? (
+            {profileImage ? (
               <Image
-                src={session.user.image}
-                alt={session?.user?.name || "User"}
-                width={100}
-                height={100}
+                src={profileImage}
+                alt={displayName || "User"}
+                fill
                 className="object-cover"
               />
             ) : (
               <span className="text-white font-bold text-lg">
-                {session?.user?.name?.charAt(0)?.toUpperCase() || "U"}
+                {displayName?.charAt(0)?.toUpperCase() || "U"}
               </span>
             )}
           </div>
           <div className="hidden xl:flex flex-col">
-            <span className="font-bold">{session?.user?.name || "User"}</span>
+            <span className="font-bold">{displayName}</span>
             <span className="text-sm text-neutral-500">@{session?.user?.email?.split('@')[0]}</span>
           </div>
         </div>

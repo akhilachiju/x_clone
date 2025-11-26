@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
 
@@ -18,6 +18,43 @@ const shareAction = async (formData: FormData, settings: ShareSettings) => {
 const Share = () => {
   const [desc, setDesc] = useState("");
   const { data: session } = useSession();
+  const [profileImage, setProfileImage] = useState('');
+
+  // Fetch updated profile data
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (session?.user?.email) {
+        try {
+          const response = await fetch('/api/profile');
+          if (response.ok) {
+            const userData = await response.json();
+            setProfileImage(userData.image || '');
+          }
+        } catch (error) {
+          console.error('Failed to fetch profile:', error);
+        }
+      }
+    };
+
+    fetchProfile();
+  }, [session]);
+
+  // Listen for profile updates
+  useEffect(() => {
+    const handleProfileUpdate = () => {
+      if (session?.user?.email) {
+        fetch('/api/profile')
+          .then(res => res.json())
+          .then(userData => {
+            setProfileImage(userData.image || '');
+          })
+          .catch(console.error);
+      }
+    };
+
+    window.addEventListener('profileUpdated', handleProfileUpdate);
+    return () => window.removeEventListener('profileUpdated', handleProfileUpdate);
+  }, [session]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -36,12 +73,11 @@ const Share = () => {
     <form className="p-4 flex gap-4" onSubmit={handleSubmit}>
       {/* AVATAR */}
       <div className="w-10 h-10 relative rounded-full overflow-hidden bg-gray-600 flex items-center justify-center">
-        {session?.user?.image ? (
+        {profileImage ? (
           <Image
-            src={session.user.image}
+            src={profileImage}
             alt={session?.user?.name || "User"}
-            width={40}
-            height={40}
+            fill
             className="object-cover"
           />
         ) : (
