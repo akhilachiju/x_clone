@@ -95,7 +95,7 @@ const Share = () => {
           placeholder="What's happening?"
           value={desc}
           onChange={(e) => setDesc(e.target.value)} 
-          className="bg-transparent outline-none placeholder:text-gray-500 text-xl w-full mt-1.5"
+          className="bg-transparent outline-none placeholder:text-neutral-500 text-xl w-full mt-1.5"
         />
 
         {/* ICONS ROW */}

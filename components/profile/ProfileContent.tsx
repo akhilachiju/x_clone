@@ -28,8 +28,8 @@ export default function ProfileContent({ activeTab }: ProfileContentProps) {
         {/* Content */}
         <div className="py-12">
           <div className="max-w-md mx-auto px-10 text-left">
-            <h2 className="text-white text-3xl font-bold mb-3">You don't have any likes yet</h2>
-            <p className="text-neutral-500 text-base leading-relaxed mb-6">Tap the heart on any post to show it some love. When you do, it'll show up here.</p>
+            <h2 className="text-white text-3xl font-bold mb-3">You don&apos;t have any likes yet</h2>
+            <p className="text-neutral-500 text-base leading-relaxed mb-6">Tap the heart on any post to show it some love. When you do, it&apos;ll show up here.</p>
           </div>
         </div>
       </div>
