@@ -11,6 +11,7 @@ const LeftBar = () => {
   const { data: session } = useSession();
   const [profileImage, setProfileImage] = useState('');
   const [profileName, setProfileName] = useState('');
+  const [username, setUsername] = useState('');
 
   // Fetch updated profile data
   useEffect(() => {
@@ -22,6 +23,7 @@ const LeftBar = () => {
             const userData = await response.json();
             setProfileImage(userData.image || '');
             setProfileName(userData.name || '');
+            setUsername(userData.username || session.user.email?.split('@')[0] || '');
           }
         } catch (error) {
           console.error('Failed to fetch profile:', error);
@@ -151,7 +153,7 @@ const LeftBar = () => {
           </div>
           <div className="hidden xl:flex flex-col">
             <span className="font-bold">{displayName}</span>
-            <span className="text-sm text-neutral-500">@{session?.user?.email?.split('@')[0]}</span>
+            <span className="text-sm text-neutral-500">@{username || session?.user?.email?.split('@')[0]}</span>
           </div>
         </div>
         <div className="hidden xl:block cursor-pointer font-bold pl-10">...</div>

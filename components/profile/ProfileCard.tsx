@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useState } from "react";
 import UnfollowModal from "../model/UnfollowModal";
 
@@ -50,7 +51,7 @@ export default function ProfileCard({ user, showBio = false, compact = false, on
 
   return (
     <div className={`flex items-start justify-between hover:bg-neutral-950 px-4-mx-4 ${compact ? "rounded-lg" : ""} transition-colors`}>
-      <div className="flex items-start gap-3">
+      <Link href={`/${user.username}`} className="flex items-start gap-3 flex-1 cursor-pointer">
         <div className={`w-10 h-10 rounded-full overflow-hidden flex items-center justify-center ${user.image ? "bg-gray-600" : getRandomColor(user.id)}`}>
           {user.image ? (
             <Image src={user.image} alt={user.name || user.username} width={40} height={40} className="w-full h-full object-cover" />
@@ -61,13 +62,13 @@ export default function ProfileCard({ user, showBio = false, compact = false, on
           )}
         </div>
         <div className="flex-1">
-          <h1 className="text-md font-bold">{user.name || user.username}</h1>
+          <h1 className="text-md font-bold hover:underline">{user.name || user.username}</h1>
           <span className="text-gray-500 text-sm">@{user.username}</span>
           {showBio && user.bio && user.bio.trim() && (
             <p className="text-white text-sm font-medium">{user.bio}</p>
           )}
         </div>
-      </div>
+      </Link>
 
       <button 
         onClick={handleFollow}
