@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useFollow } from "@/contexts/FollowContext";
+import { useFollowManager } from "@/hooks/useFollowManager";
 import ProfileCard from "./ProfileCard";
 
 interface User {
@@ -38,31 +39,45 @@ export default function WhoToFollow({
   const [users, setUsers] = useState<User[]>([]);
   const [totalUsers, setTotalUsers] = useState(0);
   const [loading, setLoading] = useState(true);
+  const { performFollow: centralizedFollow } = useFollowManager();
 
-  const performFollow = async (userId: string) => {
-    try {
-      const response = await fetch('/api/follow', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ followingId: userId })
-      });
-
-      if (response.ok) {
-        const { following } = await response.json();
-        setUsers(users.map(user => 
-          user.id === userId ? { ...user, isFollowing: following } : user
-        ));
-        
-        if (following) {
-          incrementFollowing();
-        } else {
-          decrementFollowing();
-        }
+  // Listen for follow state changes from centralized hook
+  useEffect(() => {
+    const handleFollowStateChange = (event: any) => {
+      const { userId, isFollowing } = event.detail;
+      setUsers(prev => prev.map(user => 
+        user.id === userId ? { ...user, isFollowing } : user
+      ));
+      
+      if (isFollowing) {
+        incrementFollowing();
+      } else {
+        decrementFollowing();
       }
-    } catch (error) {
-      console.error('Failed to follow/unfollow:', error);
-    }
-  };
+    };
+
+    window.addEventListener('followStateChanged', handleFollowStateChange);
+    return () => window.removeEventListener('followStateChanged', handleFollowStateChange);
+  }, [incrementFollowing, decrementFollowing]);
+
+  // Listen for follow state changes from other components
+  useEffect(() => {
+    const handleFollowStateChange = (event: any) => {
+      const { userId, isFollowing } = event.detail;
+      setUsers(prev => prev.map(user => 
+        user.id === userId ? { ...user, isFollowing } : user
+      ));
+      
+      if (isFollowing) {
+        incrementFollowing();
+      } else {
+        decrementFollowing();
+      }
+    };
+
+    window.addEventListener('followStateChanged', handleFollowStateChange);
+    return () => window.removeEventListener('followStateChanged', handleFollowStateChange);
+  }, [incrementFollowing, decrementFollowing]);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -127,7 +142,7 @@ export default function WhoToFollow({
           user={user}
           showBio={showBio}
           compact={compact}
-          onFollow={performFollow}
+          onFollow={centralizedFollow}
         />
       ))}
 

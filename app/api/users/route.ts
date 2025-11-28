@@ -3,8 +3,28 @@ import { getServerSession } from 'next-auth';
 import prisma from '@/lib/prismadb';
 import { authOptions } from '../auth/[...nextauth]/route';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const username = searchParams.get('username');
+    
+    console.log('Searching for username:', username);
+    
+    if (username) {
+      // Get specific user by username, email, or email prefix
+      const user = await prisma.user.findFirst({
+        where: {
+          OR: [
+            { username: username },
+            { email: username },
+            { email: { startsWith: username + '@' } }
+          ]
+        }
+      });
+      
+      return NextResponse.json(user);
+    }
+    
     const session = await getServerSession(authOptions);
     
     const currentUser = session?.user?.email ? await prisma.user.findUnique({

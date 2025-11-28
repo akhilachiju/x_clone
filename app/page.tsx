@@ -1,7 +1,8 @@
 "use client";
 
-import Share from "@/components/layouts/Share";
 import { useState } from "react";
+import Share from "@/components/layouts/Share";
+import FollowingFeed from "@/components/feed/FollowingFeed";
 
 const Homepage = () => {
   const [activeTab, setActiveTab] = useState<"for-you" | "following">("for-you");
@@ -50,15 +51,7 @@ const Homepage = () => {
       )}
       
       {activeTab === "following" && (
-        <div className="mx-32 mt-10">
-          <h2 className="text-3xl font-bold mb-4">Welcome to X!</h2>
-          <p className="text-neutral-500 mb-6 max-w-md">
-            This is the best place to see what&apos;s happening in your world. Find some people and topics to follow now.
-          </p>
-          <button className="bg-sky-500 text-white px-8 py-3 rounded-full font-semibold hover:bg-sky-600 transition-colors">
-            Let&apos;s go!
-          </button>
-        </div>
+        <FollowingFeed />
       )}  
     </div>
   );

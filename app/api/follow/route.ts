@@ -22,7 +22,7 @@ export async function POST(request: Request) {
     }
 
     // Check if already following
-    const isFollowing = currentUser.followingIds.includes(followingId);
+    const isFollowing = (currentUser.followingIds || []).includes(followingId);
 
     if (isFollowing) {
       // Unfollow - remove from followingIds array
@@ -30,10 +30,11 @@ export async function POST(request: Request) {
         where: { id: currentUser.id },
         data: {
           followingIds: {
-            set: currentUser.followingIds.filter(id => id !== followingId)
+            set: (currentUser.followingIds || []).filter(id => id !== followingId)
           }
         }
       });
+
       return NextResponse.json({ following: false });
     } else {
       // Follow - add to followingIds array
@@ -41,14 +42,19 @@ export async function POST(request: Request) {
         where: { id: currentUser.id },
         data: {
           followingIds: {
-            push: followingId
+            set: [...(currentUser.followingIds || []), followingId]
           }
         }
       });
+
       return NextResponse.json({ following: true });
     }
   } catch (error) {
-    console.log(error);
+    console.error('Follow API error details:', {
+      error: error,
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
+    });
     return new NextResponse("Internal Error", { status: 500 });
   }
 }

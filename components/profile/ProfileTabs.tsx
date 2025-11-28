@@ -3,10 +3,13 @@
 interface ProfileTabsProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
+  isOwnProfile?: boolean;
 }
 
-export default function ProfileTabs({ activeTab, setActiveTab }: ProfileTabsProps) {
-  const tabs = ["Posts", "Replies", "Highlights", "Articles", "Media", "Likes"];
+export default function ProfileTabs({ activeTab, setActiveTab, isOwnProfile = true }: ProfileTabsProps) {
+  const tabs = isOwnProfile 
+    ? ["Posts", "Replies", "Highlights", "Articles", "Media", "Likes"]
+    : ["Posts", "Replies", "Media"];
 
   return (
     <div className="border-b border-neutral-800">
