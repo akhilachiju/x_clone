@@ -4,6 +4,7 @@ import { useSession } from "next-auth/react";
 import { useState, use, useEffect } from "react";
 import { redirect } from "next/navigation";
 import ProfileHeader from "@/components/profile/ProfileHeader";
+import { fetchUserByUsername } from "@/lib/userUtils";
 import ProfileInfo from "@/components/profile/ProfileInfo";
 import ProfileTabs from "@/components/profile/ProfileTabs";
 import ProfileContent from "@/components/profile/ProfileContent";
@@ -24,11 +25,8 @@ export default function UserProfile({ params }: ProfilePageProps) {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await fetch(`/api/users?username=${username}`);
-        if (response.ok) {
-          const userData = await response.json();
-          setUser(userData);
-        }
+        const userData = await fetchUserByUsername(username);
+        setUser(userData);
       } catch (error) {
         console.error('Failed to fetch user:', error);
       } finally {
@@ -40,6 +38,45 @@ export default function UserProfile({ params }: ProfilePageProps) {
       fetchUser();
     }
   }, [username]);
+
+  // Separate useEffect for profile update listener
+  useEffect(() => {
+    const handleProfileUpdate = () => {
+      if (session?.user?.email?.split('@')[0] === username) {
+        // Only refetch if this is the current user's profile
+        const fetchUser = async () => {
+          try {
+            const userData = await fetchUserByUsername(username);
+            setUser(userData);
+          } catch (error) {
+            console.error('Failed to fetch user:', error);
+          }
+        };
+        fetchUser();
+      }
+    };
+
+    const handleFollowStateChange = () => {
+      // Refetch user data when follow state changes to update counts
+      const fetchUser = async () => {
+        try {
+          const userData = await fetchUserByUsername(username);
+          setUser(userData);
+        } catch (error) {
+          console.error('Failed to fetch user:', error);
+        }
+      };
+      fetchUser();
+    };
+
+    window.addEventListener('profileUpdated', handleProfileUpdate);
+    window.addEventListener('followStateChanged', handleFollowStateChange);
+    
+    return () => {
+      window.removeEventListener('profileUpdated', handleProfileUpdate);
+      window.removeEventListener('followStateChanged', handleFollowStateChange);
+    };
+  }, [username, session?.user?.email]);
 
   // Loading state
   if (loading) {

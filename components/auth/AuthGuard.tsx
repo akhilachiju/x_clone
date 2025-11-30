@@ -3,8 +3,9 @@
 import { useSession } from "next-auth/react";
 import { useEffect, useRef } from "react";
 import Image from "next/image";
-import useLoginModal from "@/hooks/useLoginModal";
-import useRegisterModal from "@/hooks/useRegisterModal";
+import { RiTwitterXFill } from "react-icons/ri";
+import useModal from "@/hooks/useModal";
+import IconButton from "../ui/IconButton";
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -12,8 +13,7 @@ interface AuthGuardProps {
 
 export default function AuthGuard({ children }: AuthGuardProps) {
   const { data: session, status } = useSession();
-  const loginModal = useLoginModal();
-  const registerModal = useRegisterModal();
+  const { openLogin } = useModal();
   const hasTriggeredModal = useRef(false);
 
   useEffect(() => {
@@ -66,12 +66,14 @@ export default function AuthGuard({ children }: AuthGuardProps) {
           
           <div className="mt-4 w-80">
             <p className="text-white font-semibold mb-4 text-lg">Already have an account?</p>
-            <button 
-              onClick={() => loginModal.onOpen()}
-              className="w-full mb-3 rounded-full py-3 border border-neutral-600 text-white font-semibold hover:bg-neutral-900 transition-colors"
+            <IconButton 
+              onClick={() => openLogin()}
+              variant="outline"
+              fullWidth
+              className="mb-3 py-3"
             >
               Sign in
-            </button>
+            </IconButton>
           </div>
         </div>
       </div>

@@ -3,6 +3,8 @@
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Loading from "../ui/Loading";
+import Avatar from "../ui/Avatar";
 
 export default function FollowingFeed() {
   const { data: session } = useSession();
@@ -30,11 +32,7 @@ export default function FollowingFeed() {
   }, [session]);
 
   if (loading) {
-    return (
-      <div className="p-8 text-center text-neutral-500">
-        <p>Loading posts from people you follow...</p>
-      </div>
-    );
+    return <Loading message="Loading posts from people you follow..." className="p-8 text-center" fullScreen={false} />;
   }
 
   if (posts.length === 0) {
@@ -56,11 +54,12 @@ export default function FollowingFeed() {
       {posts.map((post: any) => (
         <div key={post.id} className="border-b border-neutral-800 p-4">
           <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center">
-              <span className="text-white font-bold text-sm">
-                {post.author?.name?.charAt(0)?.toUpperCase() || 'U'}
-              </span>
-            </div>
+            <Avatar 
+              src={post.author?.image} 
+              alt={post.author?.name || 'User'}
+              fallbackText={post.author?.name?.charAt(0)}
+              className="bg-gray-600"
+            />
             <div className="flex-1">
               <div className="flex items-center gap-2">
                 <span className="font-bold">{post.author?.name}</span>

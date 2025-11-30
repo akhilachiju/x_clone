@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prismadb';
+import { handleApiError } from '@/lib/errorHandler';
 
 export async function GET(request: Request) {
   try {
@@ -36,7 +37,6 @@ export async function GET(request: Request) {
       followers: followersCount
     });
   } catch (error) {
-    console.log(error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return handleApiError(error);
   }
 }

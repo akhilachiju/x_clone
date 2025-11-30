@@ -4,6 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import UnfollowModal from "../model/UnfollowModal";
+import Avatar from "../ui/Avatar";
+import { useUnfollowModal } from "@/hooks/useUnfollowModal";
 
 interface User {
   id: string;
@@ -23,11 +25,7 @@ interface ProfileCardProps {
 }
 
 export default function ProfileCard({ user, showBio = false, compact = false, onFollow }: ProfileCardProps) {
-  const [unfollowModal, setUnfollowModal] = useState<{ isOpen: boolean; userId: string; username: string }>({
-    isOpen: false,
-    userId: '',
-    username: ''
-  });
+  const { modal: unfollowModal, openModal, closeModal } = useUnfollowModal();
 
   const getRandomColor = (userId: string) => {
     const colors = [
@@ -43,7 +41,7 @@ export default function ProfileCard({ user, showBio = false, compact = false, on
 
   const handleFollow = () => {
     if (user.isFollowing) {
-      setUnfollowModal({ isOpen: true, userId: user.id, username: user.username });
+      openModal(user.id, user.username);
     } else {
       onFollow(user.id);
     }
@@ -52,15 +50,12 @@ export default function ProfileCard({ user, showBio = false, compact = false, on
   return (
     <div className={`flex items-start justify-between hover:bg-neutral-950 px-4-mx-4 ${compact ? "rounded-lg" : ""} transition-colors`}>
       <Link href={`/${user.username}`} className="flex items-start gap-3 flex-1 cursor-pointer">
-        <div className={`w-10 h-10 rounded-full overflow-hidden flex items-center justify-center ${user.image ? "bg-gray-600" : getRandomColor(user.id)}`}>
-          {user.image ? (
-            <Image src={user.image} alt={user.name || user.username} width={40} height={40} className="w-full h-full object-cover" />
-          ) : (
-            <span className="text-white font-bold text-sm">
-              {user.name?.charAt(0)?.toUpperCase() || user.username?.charAt(0)?.toUpperCase() || "U"}
-            </span>
-          )}
-        </div>
+        <Avatar 
+          src={user.image} 
+          alt={user.name || user.username}
+          fallbackText={user.name?.charAt(0) || user.username?.charAt(0)}
+          className={user.image ? "bg-gray-600" : getRandomColor(user.id)}
+        />
         <div className="flex-1">
           <h1 className="text-md font-bold hover:underline">{user.name || user.username}</h1>
           <span className="text-gray-500 text-sm">@{user.username}</span>
@@ -75,7 +70,7 @@ export default function ProfileCard({ user, showBio = false, compact = false, on
         className={`py-1 px-4 mt-2 font-semibold rounded-full transition-colors group ${
           user.isFollowing 
             ? 'bg-black border border-neutral-600 text-white hover:text-red-500 hover:border-red-500' 
-            : 'bg-white text-black hover:bg-gray-200'
+            : 'bg-white text-black hover:bg-neutral-200'
         }`}
       >
         <span className={user.isFollowing ? 'group-hover:hidden' : ''}>
@@ -88,7 +83,7 @@ export default function ProfileCard({ user, showBio = false, compact = false, on
 
       <UnfollowModal
         isOpen={unfollowModal.isOpen}
-        onClose={() => setUnfollowModal({ isOpen: false, userId: '', username: '' })}
+        onClose={closeModal}
         onConfirm={() => onFollow(unfollowModal.userId)}
         username={unfollowModal.username}
       />

@@ -1,15 +1,11 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
 import prisma from '@/lib/prismadb';
-import { authOptions } from '../auth/[...nextauth]/route';
+import { handleApiError } from '@/lib/errorHandler';
+import { getAuthenticatedUser, createUnauthorizedResponse } from '@/lib/authUtils';
 
 export async function PUT(request: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session?.user?.email) {
-      return new NextResponse("Unauthorized", { status: 401 });
-    }
+    const session = await getAuthenticatedUser();
 
     const { name, bio, profileImage, coverImage } = await request.json();
 
@@ -25,18 +21,13 @@ export async function PUT(request: Request) {
 
     return NextResponse.json(updatedUser);
   } catch (error) {
-    console.log(error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return handleApiError(error);
   }
 }
 
 export async function GET(request: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session?.user?.email) {
-      return new NextResponse("Unauthorized", { status: 401 });
-    }
+    const session = await getAuthenticatedUser();
 
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
@@ -51,7 +42,6 @@ export async function GET(request: Request) {
 
     return NextResponse.json(user);
   } catch (error) {
-    console.log(error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return handleApiError(error);
   }
 }

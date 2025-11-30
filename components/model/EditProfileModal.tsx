@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import Image from "next/image";
 import { HiCamera } from "react-icons/hi";
 import { IoClose } from "react-icons/io5";
+import Modal from "../ui/Modal";
+import CameraOverlay from "../ui/CameraOverlay";
 
 interface EditProfileModalProps {
   isOpen: boolean;
@@ -23,15 +25,27 @@ export default function EditProfileModal({ isOpen, onClose, onSave, initialValue
   const [profileImage, setProfileImage] = useState('');
   const [coverImage, setCoverImage] = useState('');
 
-  // Reset state when modal opens
+  // Reset form when modal opens with new values
   useEffect(() => {
     if (isOpen) {
-      setName(initialValues.name || '');
-      setBio(initialValues.bio || '');
-      setProfileImage(initialValues.avatarUrl || '');
-      setCoverImage(initialValues.coverImage || '');
+      // Use setTimeout to avoid synchronous setState
+      setTimeout(() => {
+        setName(initialValues.name || '');
+        setBio(initialValues.bio || '');
+        setProfileImage(initialValues.avatarUrl || '');
+        setCoverImage(initialValues.coverImage || '');
+      }, 0);
     }
   }, [isOpen, initialValues.name, initialValues.bio, initialValues.avatarUrl, initialValues.coverImage]);
+
+  // Reset form when modal closes
+  const handleClose = () => {
+    setName(initialValues.name || '');
+    setBio(initialValues.bio || '');
+    setProfileImage(initialValues.avatarUrl || '');
+    setCoverImage(initialValues.coverImage || '');
+    onClose();
+  };
 
   const handleProfileImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -57,27 +71,24 @@ export default function EditProfileModal({ isOpen, onClose, onSave, initialValue
 
   const handleSave = () => {
     onSave({ name, bio, profileImage, coverImage });
-    onClose();
+    handleClose();
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="fixed inset-0 backdrop-blur-sm" onClick={onClose}></div>
-      <div className="relative w-full max-w-lg mx-4 bg-black rounded-2xl border border-neutral-800 shadow-2xl">
-        
-        {/* Header */}
-        <div className="flex items-center justify-between p-4">
+    <Modal isOpen={isOpen} onClose={handleClose} className="w-full max-w-lg mx-4 shadow-2xl">
+      {/* Header */}
+      <div className="flex items-center p-4">
           <button
-            onClick={onClose}
-            className="text-white text-xl hover:bg-neutral-800 rounded-full w-8 h-8 flex items-center justify-center transition-colors"
+            onClick={handleClose}
+            className="text-white text-xl hover:bg-neutral-800 rounded-full w-8 h-8 flex items-center justify-center transition-colors mr-4"
           >
-            ×
+            <IoClose size={20} />
           </button>
-          <h2 className="text-white text-xl font-bold">Edit profile</h2>
+          <h2 className="text-white text-xl font-bold flex-1">Edit profile</h2>
           <button
-            className="bg-white text-black rounded-full px-4 py-1.5 font-bold hover:bg-gray-200 transition-colors"
+            className="bg-white text-black rounded-full px-4 py-1.5 font-bold hover:bg-neutral-200 transition-colors"
             onClick={handleSave}
           >
             Save
@@ -107,9 +118,9 @@ export default function EditProfileModal({ isOpen, onClose, onSave, initialValue
             htmlFor="cover-upload"
             className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 -ml-6 cursor-pointer"
           >
-            <div className="bg-black bg-opacity-60 rounded-full p-3 hover:bg-opacity-80 transition-colors">
+            <CameraOverlay>
               <HiCamera className="text-white text-xl" />
-            </div>
+            </CameraOverlay>
           </label>
 
           {/* Delete Icon - Only when image exists */}
@@ -118,9 +129,9 @@ export default function EditProfileModal({ isOpen, onClose, onSave, initialValue
               onClick={() => setCoverImage('')}
               className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 ml-6"
             >
-              <div className="bg-black bg-opacity-60 rounded-full p-3 hover:bg-opacity-80 transition-colors">
+              <CameraOverlay>
                 <IoClose className="text-white text-xl" />
-              </div>
+              </CameraOverlay>
             </button>
           )}
         </div>
@@ -156,9 +167,9 @@ export default function EditProfileModal({ isOpen, onClose, onSave, initialValue
               htmlFor="profile-upload"
               className="absolute inset-0 flex items-center justify-center rounded-full cursor-pointer transition-colors group"
             >
-              <div className="bg-black bg-opacity-60 rounded-full p-2 group-hover:bg-opacity-80 transition-colors">
+              <CameraOverlay size="sm" className="group-hover:bg-opacity-80">
                 <HiCamera className="text-white text-lg" />
-              </div>
+              </CameraOverlay>
             </label>
           </div>
         </div>
@@ -199,7 +210,6 @@ export default function EditProfileModal({ isOpen, onClose, onSave, initialValue
             </div>
           </div>
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 }

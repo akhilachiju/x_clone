@@ -7,7 +7,6 @@ import RightBar from "../components/layouts/RightBar";
 import LoginModal from "../components/model/LoginModal";
 import RegisterModal from "../components/model/RegisterModal";
 import { Toaster } from "react-hot-toast";
-import { FollowProvider } from "@/contexts/FollowContext";
 
 export const metadata: Metadata = {
   title: "X Clone",
@@ -37,8 +36,7 @@ export default function RootLayout({
           <RegisterModal />
           <LoginModal />
           <AuthGuard>
-            <FollowProvider>
-              <div className="max-w-3xl lg:max-w-screen-5xl xl:max-w-screen-7xl mx-auto flex justify-between">
+            <div className="max-w-3xl lg:max-w-screen-5xl xl:max-w-screen-7xl mx-auto flex justify-between">
                 <div className="px-2 sm:px-2 2xl:px-8">
                   <LeftBar />
                 </div>
@@ -51,7 +49,6 @@ export default function RootLayout({
                   <RightBar />
                 </div>
               </div>
-            </FollowProvider>
           </AuthGuard>
         </SessionWrapper>  
       </body>

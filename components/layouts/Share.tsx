@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
+import Avatar from "../ui/Avatar";
+import { useProfile } from "@/hooks/useProfile";
 
 // Type for post settings
 type ShareSettings = {
@@ -18,43 +20,7 @@ const shareAction = async (formData: FormData, settings: ShareSettings) => {
 const Share = () => {
   const [desc, setDesc] = useState("");
   const { data: session } = useSession();
-  const [profileImage, setProfileImage] = useState('');
-
-  // Fetch updated profile data
-  useEffect(() => {
-    const fetchProfile = async () => {
-      if (session?.user?.email) {
-        try {
-          const response = await fetch('/api/profile');
-          if (response.ok) {
-            const userData = await response.json();
-            setProfileImage(userData.image || '');
-          }
-        } catch (error) {
-          console.error('Failed to fetch profile:', error);
-        }
-      }
-    };
-
-    fetchProfile();
-  }, [session]);
-
-  // Listen for profile updates
-  useEffect(() => {
-    const handleProfileUpdate = () => {
-      if (session?.user?.email) {
-        fetch('/api/profile')
-          .then(res => res.json())
-          .then(userData => {
-            setProfileImage(userData.image || '');
-          })
-          .catch(console.error);
-      }
-    };
-
-    window.addEventListener('profileUpdated', handleProfileUpdate);
-    return () => window.removeEventListener('profileUpdated', handleProfileUpdate);
-  }, [session]);
+  const { image: profileImage } = useProfile();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -72,20 +38,12 @@ const Share = () => {
   return (
     <form className="p-4 flex gap-4" onSubmit={handleSubmit}>
       {/* AVATAR */}
-      <div className="w-10 h-10 relative rounded-full overflow-hidden bg-gray-600 flex items-center justify-center">
-        {profileImage ? (
-          <Image
-            src={profileImage}
-            alt={session?.user?.name || "User"}
-            fill
-            className="object-cover"
-          />
-        ) : (
-          <span className="text-white font-bold text-lg">
-            {session?.user?.name?.charAt(0)?.toUpperCase() || "U"}
-          </span>
-        )}
-      </div>
+      <Avatar 
+        src={profileImage} 
+        alt={session?.user?.name || "User"}
+        fallbackText={session?.user?.name?.charAt(0)}
+        className="bg-gray-600"
+      />
 
       {/* INPUT + ACTIONS */}
       <div className="flex-1 flex flex-col gap-4">
@@ -112,7 +70,12 @@ const Share = () => {
           {/* POST BUTTON LEFT-ALIGNED */}
           <button
             type="submit"
-            className="bg-white text-black font-bold rounded-full py-1 px-4 hover:bg-gray-200 transition"
+            disabled={!desc.trim()}
+            className={`font-bold rounded-full py-1 px-4 transition ${
+              desc.trim() 
+                ? 'bg-white text-black hover:bg-neutral-200' 
+                : 'bg-neutral-400  text-black'
+            }`}
           >
             Post
           </button>

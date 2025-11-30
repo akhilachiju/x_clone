@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
 import prisma from '@/lib/prismadb';
-import { authOptions } from '../auth/[...nextauth]/route';
+import { handleApiError } from '@/lib/errorHandler';
+import { getAuthenticatedUser } from '@/lib/authUtils';
 
 export async function GET(request: Request) {
   try {
@@ -25,11 +25,11 @@ export async function GET(request: Request) {
       return NextResponse.json(user);
     }
     
-    const session = await getServerSession(authOptions);
+    const session = await getAuthenticatedUser();
     
-    const currentUser = session?.user?.email ? await prisma.user.findUnique({
+    const currentUser = await prisma.user.findUnique({
       where: { email: session.user.email }
-    }) : null;
+    });
 
     const users = await prisma.user.findMany({
       select: {
@@ -53,7 +53,6 @@ export async function GET(request: Request) {
 
     return NextResponse.json(usersWithFollowStatus);
   } catch (error) {
-    console.log(error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return handleApiError(error);
   }
 }

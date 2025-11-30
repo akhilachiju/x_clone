@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { useFollow } from "@/contexts/FollowContext";
-import { useFollowManager } from "@/hooks/useFollowManager";
+import { fetchAllUsers } from "@/lib/userUtils";
+import { useFollowSystem } from "@/hooks/useFollowSystem";
 import ProfileCard from "./ProfileCard";
+import Loading from "../ui/Loading";
+import Avatar from "../ui/Avatar";
 
 interface User {
   id: string;
@@ -35,11 +37,11 @@ export default function WhoToFollow({
   showBio = false,
 }: WhoToFollowProps) {
   const { data: session } = useSession();
-  const { incrementFollowing, decrementFollowing } = useFollow();
+  const { incrementFollowing, decrementFollowing, performFollow } = useFollowSystem();
   const [users, setUsers] = useState<User[]>([]);
   const [totalUsers, setTotalUsers] = useState(0);
   const [loading, setLoading] = useState(true);
-  const { performFollow: centralizedFollow } = useFollowManager();
+
 
   // Listen for follow state changes from centralized hook
   useEffect(() => {
@@ -82,15 +84,12 @@ export default function WhoToFollow({
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await fetch("/api/users");
-        if (response.ok) {
-          const allUsers = await response.json();
-          const otherUsers = allUsers.filter(
-            (user: User) => user.email !== session?.user?.email && !user.isFollowing
-          );
-          setTotalUsers(otherUsers.length);
-          setUsers(otherUsers.slice(0, limit));
-        }
+        const allUsers = await fetchAllUsers();
+        const otherUsers = allUsers.filter(
+          (user: User) => user.email !== session?.user?.email && !user.isFollowing
+        );
+        setTotalUsers(otherUsers.length);
+        setUsers(otherUsers.slice(0, limit));
       } catch (error) {
         console.error("Failed to fetch users:", error);
       } finally {
@@ -110,7 +109,7 @@ export default function WhoToFollow({
         {Array.from({ length: limit }).map((_, i) => (
           <div key={i} className="animate-pulse flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-full bg-neutral-700"></div>
+              <Avatar src={null} alt="" className="bg-neutral-700 animate-pulse" />
               <div>
                 <div className="h-4 bg-neutral-700 rounded mb-1 w-20"></div>
                 <div className="h-3 bg-neutral-700 rounded w-16"></div>
@@ -142,7 +141,7 @@ export default function WhoToFollow({
           user={user}
           showBio={showBio}
           compact={compact}
-          onFollow={centralizedFollow}
+          onFollow={performFollow}
         />
       ))}
 

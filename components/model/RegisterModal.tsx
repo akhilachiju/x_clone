@@ -2,16 +2,14 @@
 
 import { useCallback, useState } from "react";
 import Input from "../ui/Input";
-import useLoginModal from "@/hooks/useLoginModal";
-import useRegisterModal from "@/hooks/useRegisterModal";
-import Modal from "./Model";
+import useModal from "@/hooks/useModal";
+import Modal from "./AuthModal";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { signIn } from "next-auth/react";
 
 const RegisterModal = () => {
-  const loginModal = useLoginModal();
-  const registerModal = useRegisterModal();
+  const { registerModal, closeRegister, toggleModals } = useModal();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -19,12 +17,9 @@ const RegisterModal = () => {
   const [isLoading, setIsLoading] = useState(false);
 
    const onToggle = useCallback(() => {
-    if (isLoading) {
-      return;
-    }
-    registerModal.onClose();
-    loginModal.onOpen();
-  }, [isLoading, registerModal, loginModal]);
+    if (isLoading) return;
+    toggleModals();
+  }, [isLoading, toggleModals]);
 
   const onSubmit = useCallback(async () => {
     try {
@@ -40,14 +35,14 @@ const RegisterModal = () => {
         email,
         password
       })
-      registerModal.onClose();
+      closeRegister();
     } catch (error) {   
       console.log(error);
       toast.error('Something went wrong.');
     } finally {
       setIsLoading(false);
     }
-  }, [registerModal,email, password, username, name]);
+  }, [closeRegister, email, password, username, name]);
 
   const bodyContent = (
     <div className="flex flex-col gap-4">
@@ -99,10 +94,10 @@ const RegisterModal = () => {
     <div>
       <Modal
         disabled={isLoading}
-        isOpen={registerModal.isOpen}
+        isOpen={registerModal}
         title="Create an account"
         actionLabel="Register"
-        onClose={registerModal.onClose}
+        onClose={closeRegister}
         onSubmit={onSubmit}
         body={bodyContent}
         footer={footerContent}

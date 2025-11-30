@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt';
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prismadb';
+import { handleApiError } from '@/lib/errorHandler';
 
 export async function POST(req: NextRequest) {
   try {
@@ -50,7 +51,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(user);
   } catch (error) {
-    console.log(error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return handleApiError(error);
   }
 }

@@ -5,52 +5,12 @@ import Image from "next/image";
 import { signOut, useSession } from "next-auth/react";
 import { BiLogOut } from "react-icons/bi";
 import toast from "react-hot-toast";
-import { useState, useEffect } from "react";
+import Avatar from "../ui/Avatar";
+import { useProfile } from "@/hooks/useProfile";
 
 const LeftBar = () => {
   const { data: session } = useSession();
-  const [profileImage, setProfileImage] = useState('');
-  const [profileName, setProfileName] = useState('');
-  const [username, setUsername] = useState('');
-
-  // Fetch updated profile data
-  useEffect(() => {
-    const fetchProfile = async () => {
-      if (session?.user?.email) {
-        try {
-          const response = await fetch('/api/profile');
-          if (response.ok) {
-            const userData = await response.json();
-            setProfileImage(userData.image || '');
-            setProfileName(userData.name || '');
-            setUsername(userData.username || session.user.email?.split('@')[0] || '');
-          }
-        } catch (error) {
-          console.error('Failed to fetch profile:', error);
-        }
-      }
-    };
-
-    fetchProfile();
-  }, [session]);
-
-  // Listen for profile updates
-  useEffect(() => {
-    const handleProfileUpdate = () => {
-      if (session?.user?.email) {
-        fetch('/api/profile')
-          .then(res => res.json())
-          .then(userData => {
-            setProfileImage(userData.image || '');
-            setProfileName(userData.name || '');
-          })
-          .catch(console.error);
-      }
-    };
-
-    window.addEventListener('profileUpdated', handleProfileUpdate);
-    return () => window.removeEventListener('profileUpdated', handleProfileUpdate);
-  }, [session]);
+  const { image: profileImage, name: profileName, username } = useProfile();
 
   const displayName = profileName || session?.user?.name || "User";
 
@@ -123,13 +83,13 @@ const LeftBar = () => {
         {/* BUTTON */}
         <Link
           href="/compose/post"
-          className="bg-white text-black rounded-full w-12 h-12 flex items-center justify-center xl:hidden"
+          className="bg-white text-black rounded-full w-12 h-12 flex items-center justify-center xl:hidden hover:bg-neutral-200 transition-colors"
         >
           <Image src="/icons/post.svg" alt="new post" width={32} height={32} />
         </Link>
         <Link
           href="/compose/post"
-          className="hidden xl:block bg-white text-black rounded-full font-bold text-sm py-4 px-25 hover:bg-gray-200"
+          className="hidden xl:block bg-white text-black rounded-full font-bold text-sm py-4 px-25 hover:bg-neutral-200"
         >
           Post
         </Link>
@@ -137,20 +97,12 @@ const LeftBar = () => {
       {/* USER */}
       <div className="flex items-center justify-between xl:justify-start w-full rounded-full hover:bg-[#181818] p-2">
         <div className="flex items-center gap-2">
-          <div className="w-10 h-10 relative rounded-full overflow-hidden bg-gray-600 flex items-center justify-center">
-            {profileImage ? (
-              <Image
-                src={profileImage}
-                alt={displayName || "User"}
-                fill
-                className="object-cover"
-              />
-            ) : (
-              <span className="text-white font-bold text-lg">
-                {displayName?.charAt(0)?.toUpperCase() || "U"}
-              </span>
-            )}
-          </div>
+          <Avatar 
+            src={profileImage} 
+            alt={displayName || "User"}
+            fallbackText={displayName?.charAt(0)}
+            className="bg-gray-600"
+          />
           <div className="hidden xl:flex flex-col">
             <span className="font-bold">{displayName}</span>
             <span className="text-sm text-neutral-500">@{username || session?.user?.email?.split('@')[0]}</span>

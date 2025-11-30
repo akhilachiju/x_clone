@@ -14,7 +14,7 @@ export const useFollowSystem = () => {
     if (!session?.user?.email) return;
 
     try {
-      const response = await fetch('/api/follow-counts');
+      const response = await fetch(`/api/user/stats?email=${session.user.email}`);
       if (response.ok) {
         const { following, followers } = await response.json();
         setFollowingCount(following);
@@ -26,7 +26,7 @@ export const useFollowSystem = () => {
   }, [session?.user?.email]);
 
   // Perform follow/unfollow action
-  const toggleFollow = useCallback(async (userId: string) => {
+  const performFollow = useCallback(async (userId: string) => {
     if (loading || !session?.user?.email) return null;
     
     setLoading(true);
@@ -71,8 +71,13 @@ export const useFollowSystem = () => {
   return {
     followingCount,
     followersCount,
-    toggleFollow,
+    followUser: performFollow, // Alias for compatibility
+    performFollow,
     loading,
-    refreshCounts: fetchFollowCounts
+    refreshCounts: fetchFollowCounts,
+    // Context compatibility methods
+    setFollowingCount,
+    incrementFollowing: () => setFollowingCount(prev => prev + 1),
+    decrementFollowing: () => setFollowingCount(prev => prev - 1)
   };
 };

@@ -1,16 +1,25 @@
 "use client";
 
-import Link from "next/link";
-import { IoArrowBack, IoSearch } from "react-icons/io5";
+import Header from "../ui/Header";
+import { IoSearch } from "react-icons/io5";
+import IconButton from "../ui/IconButton";
 
 interface ProfileHeaderProps {
   displayName: string;
   activeTab: string;
+  counts?: {
+    Posts: number;
+    Replies: number;
+    Highlights: number;
+    Articles: number;
+    Media: number;
+    Likes: number;
+  };
 }
 
-export default function ProfileHeader({ displayName, activeTab }: ProfileHeaderProps) {
+export default function ProfileHeader({ displayName, activeTab, counts }: ProfileHeaderProps) {
   const getHeaderCount = () => {
-    const counts = {
+    const defaultCounts = {
       Posts: 0,
       Replies: 0,
       Highlights: 0,
@@ -18,31 +27,34 @@ export default function ProfileHeader({ displayName, activeTab }: ProfileHeaderP
       Media: 0,
       Likes: 0
     };
-
+    
+    const actualCounts = counts || defaultCounts;
+    
     switch (activeTab) {
       case "Likes":
-        return `${counts.Likes} likes`;
+        return `${actualCounts.Likes} likes`;
       case "Media":
-        return `${counts.Media} photos & videos`;
+        return `${actualCounts.Media} photos & videos`;
       default:
-        return `${counts.Posts} posts`;
+        return `${actualCounts.Posts} posts`;
     }
   };
 
+  const rightContent = (
+    <IconButton>
+      <IoSearch size={20} />
+    </IconButton>
+  );
+
   return (
-    <div className="sticky top-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-between px-4 py-1">
-      <div className="flex items-center gap-8">
-        <Link href="/" className="p-2 rounded-full hover:bg-neutral-900 transition-colors">
-          <IoArrowBack size={20} />
-        </Link>
+    <Header 
+      title={
         <div>
-          <h1 className="text-xl font-bold">{displayName}</h1>
+          <div className="text-xl font-bold">{displayName}</div>
           <p className="text-sm text-neutral-500">{getHeaderCount()}</p>
         </div>
-      </div>
-      <button className="p-2 rounded-full hover:bg-neutral-900 transition-colors">
-        <IoSearch size={20} />
-      </button>
-    </div>
+      }
+      rightContent={rightContent}
+    />
   );
 }

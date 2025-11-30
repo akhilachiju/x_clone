@@ -13,7 +13,7 @@ export default function FollowButton({ isFollowing, onClick, className = "" }: F
       className={`py-1 px-4 font-semibold rounded-full transition-colors group ${
         isFollowing 
           ? 'bg-black border border-neutral-600 text-white hover:text-red-500 hover:border-red-500' 
-          : 'bg-white text-black hover:bg-gray-200'
+          : 'bg-white text-black hover:bg-neutral-200'
       } ${className}`}
     >
       <span className={isFollowing ? 'group-hover:hidden' : ''}>

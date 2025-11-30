@@ -1,15 +1,11 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
 import prisma from '@/lib/prismadb';
-import { authOptions } from '../auth/[...nextauth]/route';
+import { handleApiError } from '@/lib/errorHandler';
+import { getAuthenticatedUser, createUnauthorizedResponse } from '@/lib/authUtils';
 
 export async function POST(request: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session?.user?.email) {
-      return new NextResponse("Unauthorized", { status: 401 });
-    }
+    const session = await getAuthenticatedUser();
 
     const { followingId } = await request.json();
 
@@ -50,11 +46,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ following: true });
     }
   } catch (error) {
-    console.error('Follow API error details:', {
-      error: error,
-      message: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined
-    });
-    return new NextResponse("Internal Error", { status: 500 });
+    return handleApiError(error);
   }
 }

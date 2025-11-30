@@ -4,33 +4,88 @@ import Image from "next/image";
 import Link from "next/link";
 import { IoCalendarOutline } from "react-icons/io5";
 import { useSession } from "next-auth/react";
-import { useEffect, useState } from "react";
-import { useFollow } from "@/contexts/FollowContext";
-import { useFollowUser } from "@/hooks/useFollow";
+import { useEffect, useState, useMemo } from "react";
+import { fetchUserByUsername } from "@/lib/userUtils";
+import { useFollowSystem } from "@/hooks/useFollowSystem";
 import EditProfileModal from "../model/EditProfileModal";
 import UnfollowModal from "../model/UnfollowModal";
 import FollowButton from "../ui/FollowButton";
+import IconButton from "../ui/IconButton";
+import { useUnfollowModal } from "@/hooks/useUnfollowModal";
+
+interface User {
+  id: string;
+  username: string;
+  name?: string;
+  bio?: string;
+  image?: string;
+  coverImage?: string;
+  createdAt?: string;
+  followerIds?: string[];
+  followingIds?: string[];
+}
 
 interface ProfileInfoProps {
   displayName: string;
   displayUsername: string;
   isOwnProfile: boolean;
-  user?: any;
+  user?: User;
 }
 
 export default function ProfileInfo({ displayName, displayUsername, isOwnProfile, user }: ProfileInfoProps) {
   const { data: session } = useSession();
-  const { followingCount, setFollowingCount } = useFollow();
-  const [followersCount, setFollowersCount] = useState(0);
-  const [joinedDate, setJoinedDate] = useState('');
+  const { followUser } = useFollowSystem();
+  
+  const followersCount = useMemo(() => {
+    if (isOwnProfile) {
+      return 0; // Will be set by useEffect when fetching stats
+    }
+    return user?.followerIds?.length || 0;
+  }, [isOwnProfile, user?.followerIds]);
+
+  const followingCount = useMemo(() => {
+    if (isOwnProfile) {
+      return 0; // Will be set by useEffect when fetching stats
+    }
+    return user?.followingIds?.length || 0;
+  }, [isOwnProfile, user?.followingIds]);
+  
+  const [followersCountForOwnProfile, setFollowersCountForOwnProfile] = useState(0);
+  const [followingCountForOwnProfile, setFollowingCountForOwnProfile] = useState(0);
+  const [localFollowersCount, setLocalFollowersCount] = useState(0);
+
+  // Initialize local followers count
+  useEffect(() => {
+    if (!isOwnProfile && user?.followerIds) {
+      setLocalFollowersCount(user.followerIds.length);
+    }
+  }, [isOwnProfile, user?.followerIds]);
+  const joinedDate = useMemo(() => {
+    let dateToFormat = null;
+    
+    if (isOwnProfile) {
+      // Will be set by useEffect when profile data is fetched
+      return '';
+    } else if (user?.createdAt) {
+      dateToFormat = user.createdAt;
+    }
+    
+    if (dateToFormat) {
+      const date = new Date(dateToFormat);
+      return date.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'long' 
+      });
+    }
+    
+    return '';
+  }, [isOwnProfile, user]);
+
+  const [joinedDateForOwnProfile, setJoinedDateForOwnProfile] = useState('');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const { followUser } = useFollowUser();
+
   const [isFollowing, setIsFollowing] = useState(false);
-  const [unfollowModal, setUnfollowModal] = useState<{ isOpen: boolean; userId: string; username: string }>({
-    isOpen: false,
-    userId: '',
-    username: ''
-  });
+  const { modal: unfollowModal, openModal, closeModal } = useUnfollowModal();
 
   const getRandomColor = (userId: string) => {
     const colors = [
@@ -48,12 +103,19 @@ export default function ProfileInfo({ displayName, displayUsername, isOwnProfile
     if (!user?.id) return;
     
     if (isFollowing) {
-      setUnfollowModal({ isOpen: true, userId: user.id, username: user.username });
+      openModal(user.id, user.username);
     } else {
       const result = await followUser(user.id);
       if (result !== null) {
-        // Refresh page to sync all components
-        window.location.reload();
+        setIsFollowing(result);
+        // Update local follower count instantly for the viewed profile
+        if (!isOwnProfile) {
+          setLocalFollowersCount(prev => result ? prev + 1 : prev - 1);
+        }
+        // Update own following count if this is own profile
+        if (isOwnProfile) {
+          setFollowingCountForOwnProfile(prev => result ? prev + 1 : prev - 1);
+        }
       }
     }
   };
@@ -61,18 +123,24 @@ export default function ProfileInfo({ displayName, displayUsername, isOwnProfile
   const confirmUnfollow = async () => {
     const result = await followUser(unfollowModal.userId);
     if (result !== null) {
-      // Refresh page to sync all components
-      window.location.reload();
+      setIsFollowing(result);
+      // Update local follower count instantly for the viewed profile
+      if (!isOwnProfile) {
+        setLocalFollowersCount(prev => result ? prev + 1 : prev - 1);
+      }
+      // Update own following count if this is own profile
+      if (isOwnProfile) {
+        setFollowingCountForOwnProfile(prev => result ? prev + 1 : prev - 1);
+      }
     }
-    setUnfollowModal({ isOpen: false, userId: '', username: '' });
+    closeModal();
   };
 
   // Check initial follow state when user data loads
   useEffect(() => {
     if (!isOwnProfile && user?.id && session?.user?.email) {
       // Get current user's following list to check if already following this user
-      fetch(`/api/users?username=${session.user.email.split('@')[0]}`)
-        .then(res => res.json())
+      fetchUserByUsername(session.user.email.split('@')[0])
         .then(currentUser => {
           if (currentUser && currentUser.followingIds) {
             setIsFollowing(currentUser.followingIds.includes(user.id));
@@ -84,8 +152,9 @@ export default function ProfileInfo({ displayName, displayUsername, isOwnProfile
 
   // Listen for follow state changes from other components
   useEffect(() => {
-    const handleFollowStateChange = (event: any) => {
-      const { userId, isFollowing: newFollowState } = event.detail;
+    const handleFollowStateChange = (event: Event) => {
+      const customEvent = event as CustomEvent<{ userId: string; isFollowing: boolean }>;
+      const { userId, isFollowing: newFollowState } = customEvent.detail;
       if (userId === user?.id) {
         setIsFollowing(newFollowState);
       }
@@ -94,12 +163,31 @@ export default function ProfileInfo({ displayName, displayUsername, isOwnProfile
     window.addEventListener('followStateChanged', handleFollowStateChange);
     return () => window.removeEventListener('followStateChanged', handleFollowStateChange);
   }, [user?.id]);
-  const [profileData, setProfileData] = useState({
-    name: displayName,
-    bio: '',
-    profileImage: session?.user?.image || '',
-    coverImage: ''
-  });
+  const initialProfileData = useMemo(() => {
+    if (isOwnProfile) {
+      return {
+        name: displayName,
+        bio: '',
+        profileImage: session?.user?.image || '',
+        coverImage: ''
+      };
+    } else if (user) {
+      return {
+        name: user.name || displayName,
+        bio: user.bio || '',
+        profileImage: user.image || '',
+        coverImage: user.coverImage || ''
+      };
+    }
+    return {
+      name: displayName,
+      bio: '',
+      profileImage: '',
+      coverImage: ''
+    };
+  }, [isOwnProfile, user, displayName, session?.user?.image]);
+
+  const [profileData, setProfileData] = useState(initialProfileData);
 
   const handleSaveProfile = async (data: { name: string; bio: string; profileImage?: string; coverImage?: string }) => {
     try {
@@ -126,98 +214,72 @@ export default function ProfileInfo({ displayName, displayUsername, isOwnProfile
   };
 
   useEffect(() => {
-    if (isOwnProfile) {
-      // Only fetch profile data for own profile
+    if (isOwnProfile && session?.user?.email) {
+      // Only fetch additional profile data for own profile
       const fetchProfile = async () => {
-        if (session?.user?.email) {
-          try {
-            const response = await fetch('/api/profile');
-            if (response.ok) {
-              const userData = await response.json();
-              setProfileData({
-                name: userData.name || displayName,
-                bio: userData.bio || '',
-                profileImage: userData.image || session.user.image || '',
-                coverImage: userData.coverImage || ''
+        try {
+          const response = await fetch('/api/profile');
+          if (response.ok) {
+            const userData = await response.json();
+            setProfileData(prev => ({
+              ...prev,
+              name: userData.name || prev.name,
+              bio: userData.bio || '',
+              profileImage: userData.image || prev.profileImage,
+              coverImage: userData.coverImage || ''
+            }));
+            
+            // Format the joined date for own profile
+            if (userData.createdAt) {
+              const date = new Date(userData.createdAt);
+              const formattedDate = date.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long' 
               });
-              
-              // Format the joined date
-              if (userData.createdAt) {
-                const date = new Date(userData.createdAt);
-                const formattedDate = date.toLocaleDateString('en-US', { 
-                  year: 'numeric', 
-                  month: 'long' 
-                });
-                setJoinedDate(formattedDate);
-              }
+              setJoinedDateForOwnProfile(formattedDate);
             }
-          } catch (error) {
-            console.error('Failed to fetch profile:', error);
           }
+        } catch (error) {
+          console.error('Failed to fetch profile:', error);
         }
       };
       fetchProfile();
-    } else {
-      // For other users, use the passed user data
-      if (user) {
-        setProfileData({
-          name: user.name || displayName,
-          bio: user.bio || '',
-          profileImage: user.image || '',
-          coverImage: user.coverImage || ''
-        });
-        
-        // Format the joined date
-        if (user.createdAt) {
-          const date = new Date(user.createdAt);
-          const formattedDate = date.toLocaleDateString('en-US', { 
-            year: 'numeric', 
-            month: 'long' 
-          });
-          setJoinedDate(formattedDate);
-        }
-      }
     }
-  }, [session, displayName, isOwnProfile, user]);
+  }, [isOwnProfile, session?.user?.email]);
 
   useEffect(() => {
-    if (isOwnProfile) {
+    if (isOwnProfile && session?.user?.email) {
       const fetchCounts = async () => {
-        if (session?.user?.email) {
-          try {
-            const response = await fetch(`/api/user/stats?email=${session.user.email}`);
-            if (response.ok) {
-              const { following, followers } = await response.json();
-              setFollowingCount(following);
-              setFollowersCount(followers);
-            }
-          } catch (error) {
-            console.error('Failed to fetch user stats:', error);
+        try {
+          const response = await fetch(`/api/user/stats?email=${session.user?.email}`);
+          if (response.ok) {
+            const { following, followers } = await response.json();
+            setFollowingCountForOwnProfile(following);
+            setFollowersCountForOwnProfile(followers);
           }
+        } catch (error) {
+          console.error('Failed to fetch user stats:', error);
         }
       };
       fetchCounts();
-    } else {
-      // For other users, use their follower/following arrays
-      if (user) {
-        setFollowersCount(user.followerIds?.length || 0);
-        setFollowingCount(user.followingIds?.length || 0);
-      }
     }
-  }, [session, isOwnProfile, user]);
+  }, [isOwnProfile, session?.user?.email]);
 
   // Listen for follow changes and refresh counts
   useEffect(() => {
-    const handleFollowChange = () => {
-      if (user) {
-        // Refetch user data to get updated counts
-        window.location.reload();
+    const handleFollowChange = (event: Event) => {
+      const customEvent = event as CustomEvent<{ userId: string; isFollowing: boolean }>;
+      const { isFollowing: newFollowState } = customEvent.detail;
+      
+      // Update own profile following count when following anyone
+      if (isOwnProfile) {
+        setFollowingCountForOwnProfile(prev => newFollowState ? prev + 1 : prev - 1);
       }
     };
 
     window.addEventListener('followStateChanged', handleFollowChange);
     return () => window.removeEventListener('followStateChanged', handleFollowChange);
-  }, [user]);
+  }, [isOwnProfile]);
 
   return (
     <>
@@ -256,12 +318,13 @@ export default function ProfileInfo({ displayName, displayUsername, isOwnProfile
       {/* Action Button */}
       <div className="flex justify-end pt-4">
         {isOwnProfile ? (
-          <button 
+          <IconButton 
             onClick={() => setIsEditModalOpen(true)}
-            className="border border-neutral-600 text-white rounded-full px-6 py-2 font-semibold hover:bg-neutral-900 transition-colors"
+            variant="outline"
+            className="px-6 py-2"
           >
             Edit profile
-          </button>
+          </IconButton>
         ) : (
           <FollowButton 
             isFollowing={isFollowing}
@@ -281,16 +344,16 @@ export default function ProfileInfo({ displayName, displayUsername, isOwnProfile
 
         <div className="flex items-center gap-2 mt-3 text-neutral-500">
           <IoCalendarOutline size={16} />
-          <span className="text-sm">Joined {joinedDate}</span>
+          <span className="text-sm">Joined {isOwnProfile ? joinedDateForOwnProfile : joinedDate}</span>
         </div>
 
         <div className="flex gap-6 mt-3">
           <Link href={`/${session?.user?.email?.split('@')[0] || user?.username || displayUsername}/following`} className="text-sm hover:underline cursor-pointer">
-            <span className="font-bold text-white">{followingCount}</span>{" "}
+            <span className="font-bold text-white">{isOwnProfile ? followingCountForOwnProfile : followingCount}</span>{" "}
             <span className="text-neutral-500">Following</span>
           </Link>
           <Link href={`/${session?.user?.email?.split('@')[0] || user?.username || displayUsername}/followers`} className="text-sm hover:underline cursor-pointer">
-            <span className="font-bold text-white">{followersCount}</span>{" "}
+            <span className="font-bold text-white">{isOwnProfile ? followersCountForOwnProfile : localFollowersCount}</span>{" "}
             <span className="text-neutral-500">Followers</span>
           </Link>
         </div>
@@ -310,7 +373,7 @@ export default function ProfileInfo({ displayName, displayUsername, isOwnProfile
 
       <UnfollowModal
         isOpen={unfollowModal.isOpen}
-        onClose={() => setUnfollowModal({ isOpen: false, userId: '', username: '' })}
+        onClose={closeModal}
         onConfirm={confirmUnfollow}
         username={unfollowModal.username}
       />

@@ -44,7 +44,7 @@ export default function ProfileContent({ activeTab }: ProfileContentProps) {
           subtitle: "You must be subscribed to Premium to highlight posts on your profile.",
           showButton: true,
           buttonText: "Subscribe to Premium",
-          buttonStyle: "bg-white text-black hover:bg-gray-200"
+          buttonStyle: "bg-white text-black hover:bg-neutral-200"
         };
       case "Articles":
         return {
@@ -52,7 +52,7 @@ export default function ProfileContent({ activeTab }: ProfileContentProps) {
           subtitle: "You must be subscribed to Premium+ to write Articles on X",
           showButton: true,
           buttonText: "Upgrade to Premium+",
-          buttonStyle: "bg-white text-black hover:bg-gray-200"
+          buttonStyle: "bg-white text-black hover:bg-neutral-200"
         };
       case "Media":
         return {
