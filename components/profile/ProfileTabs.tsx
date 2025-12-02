@@ -18,10 +18,10 @@ export default function ProfileTabs({ activeTab, setActiveTab, isOwnProfile = tr
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`flex-1 py-4 text-center font-medium transition-colors relative ${
+            className={`flex-1 py-4 text-center font-medium transition-colors relative hover:bg-neutral-900/50 ${
               activeTab === tab
                 ? "text-white"
-                : "text-neutral-500 hover:bg-neutral-900"
+                : "text-neutral-500"
             }`}
           >
             {tab}

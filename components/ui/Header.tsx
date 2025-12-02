@@ -45,7 +45,7 @@ export default function Header({
 }: HeaderProps) {
   return (
     <div className={`sticky top-0 z-50 bg-black/80 backdrop-blur-xl border-b border-neutral-800/50 ${className}`}>
-      <div className="flex items-center justify-between px-4 py-3">
+      <div className="flex items-center justify-between p-1">
         <div className="flex items-center gap-4">
           {showBackButton && <BackButton onBackClick={onBackClick} backHref={backHref} />}
           <h1 className="text-xl font-bold">{title}</h1>

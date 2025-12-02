@@ -40,12 +40,6 @@ export default function ProfileHeader({ displayName, activeTab, counts }: Profil
     }
   };
 
-  const rightContent = (
-    <IconButton>
-      <IoSearch size={20} />
-    </IconButton>
-  );
-
   return (
     <Header 
       title={
@@ -54,7 +48,6 @@ export default function ProfileHeader({ displayName, activeTab, counts }: Profil
           <p className="text-sm text-neutral-500">{getHeaderCount()}</p>
         </div>
       }
-      rightContent={rightContent}
     />
   );
 }

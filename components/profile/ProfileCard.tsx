@@ -1,8 +1,7 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useSession } from "next-auth/react";
 import UnfollowModal from "../model/UnfollowModal";
 import Avatar from "../ui/Avatar";
 import { useUnfollowModal } from "@/hooks/useUnfollowModal";
@@ -25,7 +24,10 @@ interface ProfileCardProps {
 }
 
 export default function ProfileCard({ user, showBio = false, compact = false, onFollow }: ProfileCardProps) {
+  const { data: session } = useSession();
   const { modal: unfollowModal, openModal, closeModal } = useUnfollowModal();
+
+  const isOwnProfile = session?.user?.email === user.email;
 
   const getRandomColor = (userId: string) => {
     const colors = [
@@ -65,21 +67,23 @@ export default function ProfileCard({ user, showBio = false, compact = false, on
         </div>
       </Link>
 
-      <button 
-        onClick={handleFollow}
-        className={`py-1 px-4 mt-2 font-semibold rounded-full transition-colors group ${
-          user.isFollowing 
-            ? 'bg-black border border-neutral-600 text-white hover:text-red-500 hover:border-red-500' 
-            : 'bg-white text-black hover:bg-neutral-200'
-        }`}
-      >
-        <span className={user.isFollowing ? 'group-hover:hidden' : ''}>
-          {user.isFollowing ? 'Following' : 'Follow'}
-        </span>
-        {user.isFollowing && (
-          <span className="hidden group-hover:inline text-red-500">Unfollow</span>
-        )}
-      </button>
+      {!isOwnProfile && (
+        <button 
+          onClick={handleFollow}
+          className={`py-1 px-4 mt-2 font-semibold rounded-full transition-colors group ${
+            user.isFollowing 
+              ? 'bg-black border border-neutral-600 text-white hover:text-red-500 hover:border-red-500' 
+              : 'bg-white text-black hover:bg-neutral-200'
+          }`}
+        >
+          <span className={user.isFollowing ? 'group-hover:hidden' : ''}>
+            {user.isFollowing ? 'Following' : 'Follow'}
+          </span>
+          {user.isFollowing && (
+            <span className="hidden group-hover:inline text-red-500">Unfollow</span>
+          )}
+        </button>
+      )}
 
       <UnfollowModal
         isOpen={unfollowModal.isOpen}

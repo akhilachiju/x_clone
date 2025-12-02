@@ -22,6 +22,22 @@ export async function GET(request: Request) {
         }
       });
       
+      if (user) {
+        // Count followers for this user
+        const followersCount = await prisma.user.count({
+          where: {
+            followingIds: {
+              has: user.id
+            }
+          }
+        });
+        
+        return NextResponse.json({
+          ...user,
+          followersCount
+        });
+      }
+      
       return NextResponse.json(user);
     }
     
@@ -39,6 +55,7 @@ export async function GET(request: Request) {
         email: true,
         image: true,
         bio: true,
+        followingIds: true,
       },
       orderBy: {
         createdAt: 'desc'

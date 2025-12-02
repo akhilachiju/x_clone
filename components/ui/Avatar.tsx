@@ -37,7 +37,7 @@ export default function Avatar({
           className="w-full h-full object-cover" 
         />
       ) : (
-        <div className="w-full h-full bg-neutral-700 flex items-center justify-center text-white font-bold text-sm">
+        <div className="w-full h-full flex items-center justify-center text-white font-bold text-sm">
           {fallbackText?.toUpperCase() || alt.charAt(0)?.toUpperCase() || 'U'}
         </div>
       )}

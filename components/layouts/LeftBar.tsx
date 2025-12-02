@@ -14,12 +14,18 @@ const LeftBar = () => {
 
   const displayName = profileName || session?.user?.name || "User";
 
+  const handleHomeClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    window.location.href = '/';
+  };
+
   const menuList = [
     {
       id: 1,
       name: "Home",
       link: "/",
       icon: "home.svg",
+      onClick: handleHomeClick,
     },
     {
       id: 3,
@@ -52,19 +58,35 @@ const LeftBar = () => {
         {/* MENU LIST */}
         <div className="flex flex-col gap-4">
           {menuList.map((item) => (
-            <Link
-              href={item.link}
-              className="p-2 rounded-full hover:bg-[#181818] flex items-center gap-4"
-              key={item.id}
-            >
-              <Image
-                src={`/icons/${item.icon}`}
-                alt={item.name}
-                width={28}
-                height={28}
-              />
-              <span className="hidden xl:inline text-xl">{item.name}</span>
-            </Link>
+            item.onClick ? (
+              <button
+                key={item.id}
+                onClick={item.onClick}
+                className="p-2 rounded-full hover:bg-[#181818] flex items-center gap-4"
+              >
+                <Image
+                  src={`/icons/${item.icon}`}
+                  alt={item.name}
+                  width={28}
+                  height={28}
+                />
+                <span className="hidden xl:inline text-xl">{item.name}</span>
+              </button>
+            ) : (
+              <Link
+                href={item.link}
+                className="p-2 rounded-full hover:bg-[#181818] flex items-center gap-4"
+                key={item.id}
+              >
+                <Image
+                  src={`/icons/${item.icon}`}
+                  alt={item.name}
+                  width={28}
+                  height={28}
+                />
+                <span className="hidden xl:inline text-xl">{item.name}</span>
+              </Link>
+            )
           ))}
           {/* LOGOUT */}
           <button

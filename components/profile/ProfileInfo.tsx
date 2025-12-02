@@ -36,13 +36,6 @@ export default function ProfileInfo({ displayName, displayUsername, isOwnProfile
   const { data: session } = useSession();
   const { followUser } = useFollowSystem();
   
-  const followersCount = useMemo(() => {
-    if (isOwnProfile) {
-      return 0; // Will be set by useEffect when fetching stats
-    }
-    return user?.followerIds?.length || 0;
-  }, [isOwnProfile, user?.followerIds]);
-
   const followingCount = useMemo(() => {
     if (isOwnProfile) {
       return 0; // Will be set by useEffect when fetching stats
@@ -52,14 +45,14 @@ export default function ProfileInfo({ displayName, displayUsername, isOwnProfile
   
   const [followersCountForOwnProfile, setFollowersCountForOwnProfile] = useState(0);
   const [followingCountForOwnProfile, setFollowingCountForOwnProfile] = useState(0);
-  const [localFollowersCount, setLocalFollowersCount] = useState(0);
-
-  // Initialize local followers count
-  useEffect(() => {
-    if (!isOwnProfile && user?.followerIds) {
-      setLocalFollowersCount(user.followerIds.length);
+  const [followerCountAdjustment, setFollowerCountAdjustment] = useState(0);
+  
+  const localFollowersCount = useMemo(() => {
+    if (!isOwnProfile && user?.followersCount !== undefined) {
+      return user.followersCount + followerCountAdjustment;
     }
-  }, [isOwnProfile, user?.followerIds]);
+    return followerCountAdjustment;
+  }, [isOwnProfile, user?.followersCount, followerCountAdjustment]);
   const joinedDate = useMemo(() => {
     let dateToFormat = null;
     
@@ -108,14 +101,7 @@ export default function ProfileInfo({ displayName, displayUsername, isOwnProfile
       const result = await followUser(user.id);
       if (result !== null) {
         setIsFollowing(result);
-        // Update local follower count instantly for the viewed profile
-        if (!isOwnProfile) {
-          setLocalFollowersCount(prev => result ? prev + 1 : prev - 1);
-        }
-        // Update own following count if this is own profile
-        if (isOwnProfile) {
-          setFollowingCountForOwnProfile(prev => result ? prev + 1 : prev - 1);
-        }
+        // Don't update follower count here - let the event listener handle it
       }
     }
   };
@@ -124,14 +110,7 @@ export default function ProfileInfo({ displayName, displayUsername, isOwnProfile
     const result = await followUser(unfollowModal.userId);
     if (result !== null) {
       setIsFollowing(result);
-      // Update local follower count instantly for the viewed profile
-      if (!isOwnProfile) {
-        setLocalFollowersCount(prev => result ? prev + 1 : prev - 1);
-      }
-      // Update own following count if this is own profile
-      if (isOwnProfile) {
-        setFollowingCountForOwnProfile(prev => result ? prev + 1 : prev - 1);
-      }
+      // Don't update follower count here - let the event listener handle it
     }
     closeModal();
   };
@@ -157,12 +136,16 @@ export default function ProfileInfo({ displayName, displayUsername, isOwnProfile
       const { userId, isFollowing: newFollowState } = customEvent.detail;
       if (userId === user?.id) {
         setIsFollowing(newFollowState);
+        // Update follower count adjustment immediately
+        if (!isOwnProfile) {
+          setFollowerCountAdjustment(prev => newFollowState ? prev + 1 : prev - 1);
+        }
       }
     };
 
     window.addEventListener('followStateChanged', handleFollowStateChange);
     return () => window.removeEventListener('followStateChanged', handleFollowStateChange);
-  }, [user?.id]);
+  }, [user?.id, isOwnProfile]);
   const initialProfileData = useMemo(() => {
     if (isOwnProfile) {
       return {
@@ -336,10 +319,10 @@ export default function ProfileInfo({ displayName, displayUsername, isOwnProfile
 
       {/* Profile Info */}
       <div className="mt-4">
-        <h2 className="text-2xl font-bold">{profileData.name}</h2>
-        <p className="text-neutral-500">@{session?.user?.email?.split('@')[0] || user?.username || displayUsername}</p>
-        {profileData.bio && (
-          <p className="text-white mt-3">{profileData.bio}</p>
+        <h2 className="text-2xl font-bold">{isOwnProfile ? profileData.name : (user?.name || displayName)}</h2>
+        <p className="text-neutral-500">@{isOwnProfile ? (session?.user?.email?.split('@')[0] || displayUsername) : (user?.username || displayUsername)}</p>
+        {(isOwnProfile ? profileData.bio : user?.bio) && (
+          <p className="text-white mt-3">{isOwnProfile ? profileData.bio : user?.bio}</p>
         )}
 
         <div className="flex items-center gap-2 mt-3 text-neutral-500">
@@ -348,11 +331,11 @@ export default function ProfileInfo({ displayName, displayUsername, isOwnProfile
         </div>
 
         <div className="flex gap-6 mt-3">
-          <Link href={`/${session?.user?.email?.split('@')[0] || user?.username || displayUsername}/following`} className="text-sm hover:underline cursor-pointer">
+          <Link href={`/${isOwnProfile ? (session?.user?.email?.split('@')[0] || displayUsername) : (user?.username || displayUsername)}/following`} className="text-sm hover:underline cursor-pointer">
             <span className="font-bold text-white">{isOwnProfile ? followingCountForOwnProfile : followingCount}</span>{" "}
             <span className="text-neutral-500">Following</span>
           </Link>
-          <Link href={`/${session?.user?.email?.split('@')[0] || user?.username || displayUsername}/followers`} className="text-sm hover:underline cursor-pointer">
+          <Link href={`/${isOwnProfile ? (session?.user?.email?.split('@')[0] || displayUsername) : (user?.username || displayUsername)}/followers`} className="text-sm hover:underline cursor-pointer">
             <span className="font-bold text-white">{isOwnProfile ? followersCountForOwnProfile : localFollowersCount}</span>{" "}
             <span className="text-neutral-500">Followers</span>
           </Link>

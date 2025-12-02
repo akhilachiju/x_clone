@@ -2,94 +2,130 @@
 
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { IoArrowBack } from "react-icons/io5";
-import ProfileCard from "@/components/profile/ProfileCard";
+import Header from "../ui/Header";
+import TabNavigation from "../ui/TabNavigation";
+import ProfileCard from "./ProfileCard";
 import { fetchUserByUsername, fetchUsersByIds } from "@/lib/userUtils";
 import { useFollowSystem } from "@/hooks/useFollowSystem";
-import Header from "../ui/Header";
-import Loading from "../ui/Loading";
+import Link from "next/link";
 
 interface FollowListPageProps {
-  type: 'followers' | 'following';
+  type: "followers" | "following";
 }
 
 export default function FollowListPage({ type }: FollowListPageProps) {
   const params = useParams();
   const username = params.username as string;
-  const [user, setUser] = useState<any>(null);
+  const { performFollow } = useFollowSystem();
+  
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const { performFollow } = useFollowSystem();
+
+  const tabs = [
+    { id: "followers", label: "Followers", href: `/${username}/followers` },
+    { id: "following", label: "Following", href: `/${username}/following` }
+  ];
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchUsers = async () => {
       try {
-        const userData = await fetchUserByUsername(username);
-        setUser(userData);
+        const profileUser = await fetchUserByUsername(username);
+        if (!profileUser) return;
 
-        const targetIds = type === 'followers' ? userData.followerIds : userData.followingIds;
-        if (targetIds && targetIds.length > 0) {
-          const filteredUsers = await fetchUsersByIds(targetIds);
-          setUsers(filteredUsers);
+        let userIds: string[] = [];
+        
+        if (type === "following") {
+          userIds = profileUser.followingIds || [];
+        } else {
+          // For followers, get all users and find who has this user's ID in their followingIds
+          const response = await fetch('/api/users');
+          const allUsers = await response.json();
+          userIds = allUsers
+            .filter((user: any) => user.followingIds?.includes(profileUser.id))
+            .map((user: any) => user.id);
+        }
+
+        if (userIds.length > 0) {
+          const fetchedUsers = await fetchUsersByIds(userIds);
+          setUsers(fetchedUsers);
+        } else {
+          setUsers([]);
         }
       } catch (error) {
-        console.error('Failed to fetch data:', error);
+        console.error('Failed to fetch users:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    if (username) {
-      fetchData();
-    }
-  }, [username, type]);
+    fetchUsers();
 
-  useEffect(() => {
-    const handleFollowChange = (event: any) => {
-      const { userId, isFollowing } = event.detail;
-      setUsers(prev => prev.map(user => 
-        user.id === userId ? { ...user, isFollowing } : user
-      ));
+    const handleFollowStateChange = () => {
+      fetchUsers();
     };
 
-    window.addEventListener('followStateChanged', handleFollowChange);
-    return () => window.removeEventListener('followStateChanged', handleFollowChange);
-  }, []);
+    window.addEventListener('followStateChanged', handleFollowStateChange);
+    return () => window.removeEventListener('followStateChanged', handleFollowStateChange);
+  }, [username, type]);
 
-  if (loading) {
-    return <Loading />;
-  }
-
-  const title = type === 'followers' ? 'Followers' : 'Following';
-  const count = type === 'followers' ? user?.followerIds?.length || 0 : user?.followingIds?.length || 0;
+  const renderEmptyState = () => {
+    if (type === "following") {
+      return (
+        <div className="flex flex-col items-center justify-center py-16 px-8 text-center">
+          <h2 className="text-3xl font-bold mb-4">Be in the know</h2>
+          <p className="text-neutral-400 text-lg mb-8 max-w-md">
+            Following accounts is an easy way to curate your timeline and know what&apos;s happening with the topics and people you&apos;re interested in.
+          </p>
+          <Link 
+            href="/connect"
+            className="bg-sky-500 hover:bg-sky-600 text-white font-bold py-3 px-8 rounded-full transition-colors"
+          >
+            Find people to follow
+          </Link>
+        </div>
+      );
+    } else {
+      return (
+        <div className="flex flex-col items-center justify-center py-16 px-8 text-center">
+          <h2 className="text-3xl font-bold mb-4">Looking for followers?</h2>
+          <p className="text-neutral-400 text-lg max-w-md">
+            When someone follows this account, they&apos;ll show up here. Posting and interacting with others helps boost followers.
+          </p>
+        </div>
+      );
+    }
+  };
 
   return (
-    <div className="bg-black text-white min-h-screen">
+    <div className="min-h-screen bg-black text-white">
       <Header 
-        title={user?.name || username}
-        backHref={`/${username}`}
-      >
-        <div className="px-4 pb-2">
-          <p className="text-sm text-neutral-500">{count} {title}</p>
-        </div>
-      </Header>
+        title={
+          <div>
+            <div className="text-xl font-bold">{username}</div>
+            <p className="text-sm text-neutral-500">@{username}</p>
+          </div>
+        }
+      />
+      
+      <TabNavigation tabs={tabs} activeTab={type} type="link" />
 
       <div className="max-w-2xl mx-auto">
-        {users.length === 0 ? (
-          <div className="p-8 text-center text-neutral-500">
-            <p>No {type} yet.</p>
+        {loading ? (
+          <div className="flex justify-center py-8">
+            <div className="text-neutral-500">Loading...</div>
           </div>
+        ) : users.length === 0 ? (
+          renderEmptyState()
         ) : (
           <div className="divide-y divide-neutral-800">
             {users.map((user) => (
-              <ProfileCard
-                key={user.id}
-                user={user}
-                onFollow={(userId) => {
-                  performFollow(userId);
-                }}
-              />
+              <div key={user.id} className="p-4">
+                <ProfileCard
+                  user={user}
+                  showBio={true}
+                  onFollow={performFollow}
+                />
+              </div>
             ))}
           </div>
         )}

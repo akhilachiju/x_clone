@@ -29,6 +29,14 @@ export default function FollowingFeed() {
     };
 
     fetchFollowingPosts();
+
+    // Listen for follow state changes to refresh feed
+    const handleFollowStateChange = () => {
+      fetchFollowingPosts();
+    };
+
+    window.addEventListener('followStateChanged', handleFollowStateChange);
+    return () => window.removeEventListener('followStateChanged', handleFollowStateChange);
   }, [session]);
 
   if (loading) {
@@ -55,19 +63,19 @@ export default function FollowingFeed() {
         <div key={post.id} className="border-b border-neutral-800 p-4">
           <div className="flex items-start gap-3">
             <Avatar 
-              src={post.author?.image} 
-              alt={post.author?.name || 'User'}
-              fallbackText={post.author?.name?.charAt(0)}
+              src={post.user?.image} 
+              alt={post.user?.name || 'User'}
+              fallbackText={post.user?.name?.charAt(0)}
               className="bg-gray-600"
             />
             <div className="flex-1">
               <div className="flex items-center gap-2">
-                <span className="font-bold">{post.author?.name}</span>
-                <span className="text-gray-500">@{post.author?.username}</span>
+                <span className="font-bold">{post.user?.name}</span>
+                <span className="text-gray-500">@{post.user?.username}</span>
                 <span className="text-gray-500">·</span>
                 <span className="text-gray-500">{new Date(post.createdAt).toLocaleDateString()}</span>
               </div>
-              <p className="mt-1">{post.content}</p>
+              <p className="mt-1">{post.body}</p>
             </div>
           </div>
         </div>

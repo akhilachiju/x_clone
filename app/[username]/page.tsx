@@ -4,10 +4,10 @@ import { useSession } from "next-auth/react";
 import { useState, use, useEffect } from "react";
 import { redirect } from "next/navigation";
 import ProfileHeader from "@/components/profile/ProfileHeader";
-import { fetchUserByUsername } from "@/lib/userUtils";
+import ProfileContent from "@/components/profile/ProfileContent";
 import ProfileInfo from "@/components/profile/ProfileInfo";
 import ProfileTabs from "@/components/profile/ProfileTabs";
-import ProfileContent from "@/components/profile/ProfileContent";
+import { fetchUserByUsername } from "@/lib/userUtils";
 
 interface ProfilePageProps {
   params: Promise<{
@@ -56,17 +56,23 @@ export default function UserProfile({ params }: ProfilePageProps) {
       }
     };
 
-    const handleFollowStateChange = () => {
+    const handleFollowStateChange = (event: Event) => {
+      const customEvent = event as CustomEvent<{ userId: string; isFollowing: boolean }>;
+      const { userId } = customEvent.detail;
+      
       // Refetch user data when follow state changes to update counts
-      const fetchUser = async () => {
-        try {
-          const userData = await fetchUserByUsername(username);
-          setUser(userData);
-        } catch (error) {
-          console.error('Failed to fetch user:', error);
-        }
-      };
-      fetchUser();
+      // Check if the followed user is the one whose profile we're viewing
+      if (user?.id === userId) {
+        const fetchUser = async () => {
+          try {
+            const userData = await fetchUserByUsername(username);
+            setUser(userData);
+          } catch (error) {
+            console.error('Failed to fetch user:', error);
+          }
+        };
+        fetchUser();
+      }
     };
 
     window.addEventListener('profileUpdated', handleProfileUpdate);
@@ -109,11 +115,7 @@ export default function UserProfile({ params }: ProfilePageProps) {
       
       <ProfileTabs activeTab={activeTab} setActiveTab={setActiveTab} isOwnProfile={isOwnProfile} />
       
-      <div className="p-8 text-center text-neutral-500">
-        {activeTab === "Posts" && <p>@{user.username} hasn&apos;t posted anything yet</p>}
-        {activeTab === "Replies" && <p>@{user.username} hasn&apos;t replied to anything yet</p>}
-        {activeTab === "Media" && <p>@{user.username} hasn&apos;t shared any photos or videos yet</p>}
-      </div>
+      <ProfileContent activeTab={activeTab} />
     </div>
   );
 }

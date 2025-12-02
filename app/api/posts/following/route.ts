@@ -18,12 +18,12 @@ export async function GET() {
     // Get posts from followed users
     const posts = await prisma.post.findMany({
       where: {
-        authorId: {
+        userId: {
           in: currentUser.followingIds
         }
       },
       include: {
-        author: {
+        user: {
           select: {
             id: true,
             name: true,
