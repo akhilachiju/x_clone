@@ -6,8 +6,19 @@ import Header from "../ui/Header";
 import TabNavigation from "../ui/TabNavigation";
 import ProfileCard from "./ProfileCard";
 import { fetchUserByUsername, fetchUsersByIds } from "@/lib/userUtils";
-import { useFollowSystem } from "@/hooks/useFollowSystem";
+import { useFollowContext } from "@/contexts/FollowContext";
 import Link from "next/link";
+
+interface User {
+  id: string;
+  name: string;
+  username: string;
+  email: string;
+  image?: string;
+  bio?: string;
+  followingIds?: string[];
+  followerIds?: string[];
+}
 
 interface FollowListPageProps {
   type: "followers" | "following";
@@ -16,9 +27,9 @@ interface FollowListPageProps {
 export default function FollowListPage({ type }: FollowListPageProps) {
   const params = useParams();
   const username = params.username as string;
-  const { performFollow } = useFollowSystem();
+  const { performFollow } = useFollowContext();
   
-  const [users, setUsers] = useState<any[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
 
   const tabs = [
@@ -39,10 +50,10 @@ export default function FollowListPage({ type }: FollowListPageProps) {
         } else {
           // For followers, get all users and find who has this user's ID in their followingIds
           const response = await fetch('/api/users');
-          const allUsers = await response.json();
+          const allUsers: User[] = await response.json();
           userIds = allUsers
-            .filter((user: any) => user.followingIds?.includes(profileUser.id))
-            .map((user: any) => user.id);
+            .filter((user) => user.followingIds?.includes(profileUser.id))
+            .map((user) => user.id);
         }
 
         if (userIds.length > 0) {

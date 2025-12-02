@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { signOut, useSession } from "next-auth/react";
@@ -7,10 +8,47 @@ import { BiLogOut } from "react-icons/bi";
 import toast from "react-hot-toast";
 import Avatar from "../ui/Avatar";
 import { useProfile } from "@/hooks/useProfile";
+import { usePathname } from "next/navigation";
 
 const LeftBar = () => {
   const { data: session } = useSession();
   const { image: profileImage, name: profileName, username } = useProfile();
+  const [notificationCount, setNotificationCount] = useState(0);
+  const pathname = usePathname();
+
+  useEffect(() => {
+    const fetchNotificationCount = async () => {
+      if (session) {
+        try {
+          const lastSeen = localStorage.getItem('lastSeenNotifications');
+          const url = lastSeen 
+            ? `/api/notifications/count?lastSeen=${lastSeen}`
+            : '/api/notifications/count';
+            
+          const response = await fetch(url);
+          if (response.ok) {
+            const data = await response.json();
+            setNotificationCount(data.count);
+          }
+        } catch (error) {
+          console.error('Error fetching notification count:', error);
+        }
+      }
+    };
+
+    fetchNotificationCount();
+    
+    // Refresh count every 30 seconds
+    const interval = setInterval(fetchNotificationCount, 30000);
+    return () => clearInterval(interval);
+  }, [session]);
+
+  // Reset count when visiting notifications page
+  useEffect(() => {
+    if (pathname === '/notifications') {
+      setTimeout(() => setNotificationCount(0), 1000);
+    }
+  }, [pathname]);
 
   const displayName = profileName || session?.user?.name || "User";
 
@@ -30,7 +68,7 @@ const LeftBar = () => {
     {
       id: 3,
       name: "Notifications",
-      link: "/",
+      link: "/notifications",
       icon: "notification.svg",
     },
      {
@@ -75,15 +113,22 @@ const LeftBar = () => {
             ) : (
               <Link
                 href={item.link}
-                className="p-2 rounded-full hover:bg-[#181818] flex items-center gap-4"
+                className="p-2 rounded-full hover:bg-[#181818] flex items-center gap-4 relative"
                 key={item.id}
               >
-                <Image
-                  src={`/icons/${item.icon}`}
-                  alt={item.name}
-                  width={28}
-                  height={28}
-                />
+                <div className="relative">
+                  <Image
+                    src={`/icons/${item.icon}`}
+                    alt={item.name}
+                    width={28}
+                    height={28}
+                  />
+                  {item.name === "Notifications" && notificationCount > 0 && (
+                    <div className="absolute -top-1 -right-1 bg-sky-500 text-white text-xs rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                      {notificationCount > 99 ? '99+' : notificationCount}
+                    </div>
+                  )}
+                </div>
                 <span className="hidden xl:inline text-xl">{item.name}</span>
               </Link>
             )

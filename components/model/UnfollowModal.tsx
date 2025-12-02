@@ -32,7 +32,7 @@ const UnfollowModal = ({ isOpen, onClose, onConfirm, username }: UnfollowModalPr
           <IconButton
             onClick={handleConfirm}
             fullWidth
-            className="bg-white hover:!bg-neutral-200 text-black font-semibold py-3 transition-colors"
+            className="bg-white hover:bg-neutral-200! text-black font-semibold py-3 transition-colors"
           >
             Unfollow
           </IconButton>

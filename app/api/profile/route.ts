@@ -1,16 +1,21 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prismadb';
 import { handleApiError } from '@/lib/errorHandler';
-import { getAuthenticatedUser, createUnauthorizedResponse } from '@/lib/authUtils';
+import { getAuthenticatedUser } from '@/lib/authUtils';
 
 export async function PUT(request: Request) {
   try {
     const session = await getAuthenticatedUser();
 
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const userEmail = session.user.email;
     const { name, bio, profileImage, coverImage } = await request.json();
 
     const updatedUser = await prisma.user.update({
-      where: { email: session.user.email },
+      where: { email: userEmail },
       data: {
         name,
         bio,
@@ -25,12 +30,18 @@ export async function PUT(request: Request) {
   }
 }
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
     const session = await getAuthenticatedUser();
 
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const userEmail = session.user.email;
+
     const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
+      where: { email: userEmail },
       select: {
         name: true,
         bio: true,

@@ -1,10 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 
 const SubscribePremium = () => {
-  const pathname = usePathname();
   
   return (
     <div className="p-3 rounded-2xl border border-neutral-800 flex flex-col gap-4">

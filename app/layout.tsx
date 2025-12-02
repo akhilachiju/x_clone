@@ -3,6 +3,7 @@
 import "./globals.css";
 import { usePathname } from "next/navigation";
 import SessionWrapper from "../components/providers/SessionWrapper";
+import { FollowProvider } from "../contexts/FollowContext";
 import AuthGuard from "../components/auth/AuthGuard";
 import LeftBar from "../components/layouts/LeftBar";
 import RightBar from "../components/layouts/RightBar";
@@ -32,7 +33,9 @@ export default function RootLayout({
           />
           <RegisterModal />
           <LoginModal />
-          <LayoutContent>{children}</LayoutContent>
+          <FollowProvider>
+            <LayoutContent>{children}</LayoutContent>
+          </FollowProvider>
         </SessionWrapper>  
       </body>
     </html>
