@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import WhoToFollow from "./WhoToFollow";
 import { IoLockClosed } from "react-icons/io5";
 
@@ -8,6 +10,7 @@ interface ProfileContentProps {
 }
 
 export default function ProfileContent({ activeTab }: ProfileContentProps) {
+  const pathname = usePathname();
   // Show WhoToFollow for Posts and Replies exactly like in screenshots
   if (activeTab === "Posts" || activeTab === "Replies") {
     return <WhoToFollow compact={false} showBio={true} />;
@@ -78,9 +81,9 @@ export default function ProfileContent({ activeTab }: ProfileContentProps) {
         <p className="text-neutral-500 text-base leading-relaxed mb-6">{content.subtitle}</p>
         
         {content.showButton && (
-          <button className={`px-8 py-3 rounded-full font-bold text-base transition-colors ${content.buttonStyle}`}>
+          <Link href="/premium_sign_up" className={`inline-block px-8 py-3 rounded-full font-bold text-base transition-colors ${content.buttonStyle}`}>
             {content.buttonText}
-          </button>
+          </Link>
         )}
       </div>
     </div>

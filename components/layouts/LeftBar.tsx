@@ -36,7 +36,7 @@ const LeftBar = () => {
      {
        id: 9,
        name: "Premium",
-       link: "/",
+       link: "/premium_sign_up",
        icon: "logo_2.png",
      },
     {
@@ -52,9 +52,9 @@ const LeftBar = () => {
       {/* LOGO MENU BUTTON */}
       <div className="flex flex-col gap-4 text-xl items-center xl:items-start">
         {/* LOGO */}
-        <Link href="/" className="p-2 rounded-full hover:bg-[#181818] ">
+        <button onClick={handleHomeClick} className="p-2 rounded-full hover:bg-[#181818] ">
           <Image src="/icons/logo_2.png" alt="logo" width={35} height={35} />
-        </Link>
+        </button>
         {/* MENU LIST */}
         <div className="flex flex-col gap-4">
           {menuList.map((item) => (
