@@ -1,8 +1,6 @@
 "use client";
 
 import Header from "../ui/Header";
-import { IoSearch } from "react-icons/io5";
-import IconButton from "../ui/IconButton";
 
 interface ProfileHeaderProps {
   displayName: string;

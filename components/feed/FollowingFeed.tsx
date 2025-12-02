@@ -6,9 +6,21 @@ import Link from "next/link";
 import Loading from "../ui/Loading";
 import Avatar from "../ui/Avatar";
 
+interface Post {
+  id: string;
+  body: string;
+  createdAt: string;
+  user: {
+    id: string;
+    name: string;
+    username: string;
+    image?: string;
+  };
+}
+
 export default function FollowingFeed() {
   const { data: session } = useSession();
-  const [posts, setPosts] = useState([]);
+  const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -59,7 +71,7 @@ export default function FollowingFeed() {
 
   return (
     <div className="space-y-4">
-      {posts.map((post: any) => (
+      {posts.map((post) => (
         <div key={post.id} className="border-b border-neutral-800 p-4">
           <div className="flex items-start gap-3">
             <Avatar 

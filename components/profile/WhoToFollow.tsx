@@ -4,9 +4,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { fetchAllUsers } from "@/lib/userUtils";
-import { useFollowSystem } from "@/hooks/useFollowSystem";
+import { useFollowContext } from "@/contexts/FollowContext";
 import ProfileCard from "./ProfileCard";
-import Loading from "../ui/Loading";
 import Avatar from "../ui/Avatar";
 
 interface User {
@@ -17,6 +16,11 @@ interface User {
   image?: string;
   bio?: string;
   isFollowing?: boolean;
+}
+
+interface FollowStateChangeDetail {
+  userId: string;
+  isFollowing: boolean;
 }
 
 interface WhoToFollowProps {
@@ -37,49 +41,24 @@ export default function WhoToFollow({
   showBio = false,
 }: WhoToFollowProps) {
   const { data: session } = useSession();
-  const { incrementFollowing, decrementFollowing, performFollow } = useFollowSystem();
+  const { performFollow } = useFollowContext();
   const [users, setUsers] = useState<User[]>([]);
   const [totalUsers, setTotalUsers] = useState(0);
   const [loading, setLoading] = useState(true);
 
 
-  // Listen for follow state changes from centralized hook
+  // Listen for follow state changes from other components  
   useEffect(() => {
-    const handleFollowStateChange = (event: any) => {
-      const { userId, isFollowing } = event.detail;
+    const handleFollowStateChange = (event: Event) => {
+      const { userId, isFollowing } = (event as CustomEvent<FollowStateChangeDetail>).detail;
       setUsers(prev => prev.map(user => 
         user.id === userId ? { ...user, isFollowing } : user
       ));
-      
-      if (isFollowing) {
-        incrementFollowing();
-      } else {
-        decrementFollowing();
-      }
     };
 
     window.addEventListener('followStateChanged', handleFollowStateChange);
     return () => window.removeEventListener('followStateChanged', handleFollowStateChange);
-  }, [incrementFollowing, decrementFollowing]);
-
-  // Listen for follow state changes from other components
-  useEffect(() => {
-    const handleFollowStateChange = (event: any) => {
-      const { userId, isFollowing } = event.detail;
-      setUsers(prev => prev.map(user => 
-        user.id === userId ? { ...user, isFollowing } : user
-      ));
-      
-      if (isFollowing) {
-        incrementFollowing();
-      } else {
-        decrementFollowing();
-      }
-    };
-
-    window.addEventListener('followStateChanged', handleFollowStateChange);
-    return () => window.removeEventListener('followStateChanged', handleFollowStateChange);
-  }, [incrementFollowing, decrementFollowing]);
+  }, []);
 
   useEffect(() => {
     const fetchUsers = async () => {

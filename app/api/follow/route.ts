@@ -1,11 +1,15 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prismadb';
 import { handleApiError } from '@/lib/errorHandler';
-import { getAuthenticatedUser, createUnauthorizedResponse } from '@/lib/authUtils';
+import { getAuthenticatedUser } from '@/lib/authUtils';
 
 export async function POST(request: Request) {
   try {
     const session = await getAuthenticatedUser();
+
+    if (!session?.user?.email) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
 
     const { followingId } = await request.json();
 
@@ -31,6 +35,16 @@ export async function POST(request: Request) {
         }
       });
 
+      // Remove follow notification
+      await prisma.notification.deleteMany({
+        where: {
+          userId: followingId,
+          body: {
+            contains: `You got a new follower @${currentUser.username || currentUser.name}`
+          }
+        }
+      });
+
       return NextResponse.json({ following: false });
     } else {
       // Follow - add to followingIds array
@@ -42,6 +56,21 @@ export async function POST(request: Request) {
           }
         }
       });
+
+      // Create follow notification
+      console.log('Creating notification for user:', followingId, 'from:', currentUser.id);
+      const currentDate = new Date().toLocaleDateString('en-GB', { 
+        day: 'numeric', 
+        month: 'short', 
+        year: 'numeric' 
+      });
+      const notification = await prisma.notification.create({
+        data: {
+          userId: followingId,
+          body: `You got a new follower @${currentUser.username || currentUser.name} on ${currentDate}`
+        }
+      });
+      console.log('Notification created:', notification);
 
       return NextResponse.json({ following: true });
     }

@@ -2,25 +2,45 @@
 
 import { useSession } from "next-auth/react";
 import { useState, use, useEffect } from "react";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 import ProfileHeader from "@/components/profile/ProfileHeader";
 import ProfileContent from "@/components/profile/ProfileContent";
 import ProfileInfo from "@/components/profile/ProfileInfo";
 import ProfileTabs from "@/components/profile/ProfileTabs";
 import { fetchUserByUsername } from "@/lib/userUtils";
 
+interface User {
+  id: string;
+  name: string;
+  username: string;
+  email: string;
+  image?: string;
+  bio?: string;
+  followingIds?: string[];
+  followerIds?: string[];
+}
+
 interface ProfilePageProps {
   params: Promise<{
     username: string;
   }>;
+  activeTab?: string;
 }
 
-export default function UserProfile({ params }: ProfilePageProps) {
+export default function UserProfile({ params, activeTab: propActiveTab }: ProfilePageProps) {
   const { username } = use(params);
   const { data: session } = useSession();
-  const [activeTab, setActiveTab] = useState("Posts");
-  const [user, setUser] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState(propActiveTab || "Posts");
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
+
+  // Redirect to /posts if on base profile URL
+  useEffect(() => {
+    if (!propActiveTab) {
+      router.replace(`/${username}/posts`);
+    }
+  }, [propActiveTab, username, router]);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -82,7 +102,7 @@ export default function UserProfile({ params }: ProfilePageProps) {
       window.removeEventListener('profileUpdated', handleProfileUpdate);
       window.removeEventListener('followStateChanged', handleFollowStateChange);
     };
-  }, [username, session?.user?.email]);
+  }, [username, session?.user?.email, user?.id]);
 
   // Loading state
   if (loading) {
@@ -113,9 +133,9 @@ export default function UserProfile({ params }: ProfilePageProps) {
         user={user}
       />
       
-      <ProfileTabs activeTab={activeTab} setActiveTab={setActiveTab} isOwnProfile={isOwnProfile} />
+      <ProfileTabs activeTab={activeTab} isOwnProfile={isOwnProfile} username={username} />
       
-      <ProfileContent activeTab={activeTab} />
+      <ProfileContent activeTab={activeTab} user={user} isOwnProfile={isOwnProfile} />
     </div>
   );
 }

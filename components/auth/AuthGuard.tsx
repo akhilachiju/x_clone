@@ -3,7 +3,6 @@
 import { useSession } from "next-auth/react";
 import { useEffect, useRef } from "react";
 import Image from "next/image";
-import { RiTwitterXFill } from "react-icons/ri";
 import useModal from "@/hooks/useModal";
 import IconButton from "../ui/IconButton";
 
@@ -13,7 +12,7 @@ interface AuthGuardProps {
 
 export default function AuthGuard({ children }: AuthGuardProps) {
   const { data: session, status } = useSession();
-  const { openLogin } = useModal();
+  const { openLogin, openRegister } = useModal();
   const hasTriggeredModal = useRef(false);
 
   useEffect(() => {
@@ -50,7 +49,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
           <p className="text-3xl font-semibold text-white mb-8">Join today.</p>
           
           <button 
-            onClick={() => registerModal.onOpen()}
+            onClick={() => openRegister()}
             className="mb-4 w-80 rounded-full bg-white border border-neutral-600 text-black py-3 font-semibold hover:bg-neutral-200 transition-colors"
           >
             Create account

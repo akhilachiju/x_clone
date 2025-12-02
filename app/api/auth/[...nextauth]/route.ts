@@ -46,6 +46,9 @@ export const authOptions: AuthOptions = {
       },
     }),
   ],
+  pages: {
+    signIn: '/', // Redirect to home page instead of default signin
+  },
   callbacks: {
     jwt: async ({ token, user }) => {
       if (user) {
@@ -54,8 +57,8 @@ export const authOptions: AuthOptions = {
       return token;
     },
     session: async ({ session, token }) => {
-      if (token) {
-        session.user.id = token.id as string;
+      if (token && session.user) {
+        (session.user as { id?: string }).id = token.id as string;
       }
       return session;
     },
