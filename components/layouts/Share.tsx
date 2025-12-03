@@ -5,34 +5,30 @@ import Image from "next/image";
 import { useSession } from "next-auth/react";
 import Avatar from "../ui/Avatar";
 import { useProfile } from "@/hooks/useProfile";
+import axios from "axios";
+import toast from "react-hot-toast";
 
-// Type for post settings
-type ShareSettings = {
-  type: "original" | "wide" | "square";
-  sensitive: boolean;
-};
-
-// Placeholder share action
-const shareAction = async (formData: FormData, settings: ShareSettings) => {
-  console.log("Post submitted:", formData.get("desc"), settings);
-};
-
-const Share = () => {
+const Share = ({ onPostCreated }: { onPostCreated?: () => void }) => {
   const [desc, setDesc] = useState("");
+  const [isPosting, setIsPosting] = useState(false);
   const { data: session } = useSession();
   const { image: profileImage } = useProfile();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!desc.trim()) return; // Prevent empty post
+    if (!desc.trim() || isPosting) return;
 
-    const formData = new FormData();
-    formData.append("desc", desc);
-
-    await shareAction(formData, { type: "original", sensitive: false });
-
-    window.dispatchEvent(new Event("refreshFeed"));
-    setDesc(""); // Reset input
+    setIsPosting(true);
+    try {
+      await axios.post('/api/posts', { body: desc });
+      toast.success('Post created successfully!');
+      setDesc("");
+      onPostCreated?.();
+    } catch (error) {
+      toast.error('Failed to create post');
+    } finally {
+      setIsPosting(false);
+    }
   };
 
   return (
@@ -54,6 +50,7 @@ const Share = () => {
           value={desc}
           onChange={(e) => setDesc(e.target.value)} 
           className="bg-transparent outline-none placeholder:text-neutral-500 text-xl w-full mt-1.5"
+          disabled={isPosting}
         />
 
         {/* ICONS ROW */}
@@ -70,14 +67,14 @@ const Share = () => {
           {/* POST BUTTON LEFT-ALIGNED */}
           <button
             type="submit"
-            disabled={!desc.trim()}
+            disabled={!desc.trim() || isPosting}
             className={`font-bold rounded-full py-1 px-4 transition ${
-              desc.trim() 
+              desc.trim() && !isPosting
                 ? 'bg-white text-black hover:bg-neutral-200' 
-                : 'bg-neutral-400  text-black'
+                : 'bg-neutral-400 text-black'
             }`}
           >
-            Post
+            {isPosting ? 'Posting...' : 'Post'}
           </button>
         </div>
       </div>

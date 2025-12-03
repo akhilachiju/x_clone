@@ -34,7 +34,7 @@ export default function RootLayout({
           <RegisterModal />
           <LoginModal />
           <FollowProvider>
-            <LayoutContent>{children}</LayoutContent>
+            <AppLayout>{children}</AppLayout>
           </FollowProvider>
         </SessionWrapper>  
       </body>
@@ -42,7 +42,7 @@ export default function RootLayout({
   );
 }
 
-function LayoutContent({ children }: { children: React.ReactNode }) {
+function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   
   // Premium page should render without main layout

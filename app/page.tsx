@@ -3,13 +3,19 @@
 import { useState } from "react";
 import Share from "@/components/layouts/Share";
 import FollowingFeed from "@/components/feed/FollowingFeed";
+import PostsFeed from "@/components/feed/PostsFeed";
 
 const Homepage = () => {
-  const [activeTab, setActiveTab] = useState<"for-you" | "following">("for-you");
+  const [activeTab, setActiveTab] = useState<"for-you" | "following">("following");
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const handlePostCreated = () => {
+    setRefreshKey(prev => prev + 1);
+  };
 
   return (
     <div>
-      <div className="flex justify-center font-semibold border-b border-b-neutral-800">
+      <div className="sticky top-0 z-10 backdrop-blur-md bg-black/80 flex justify-center font-semibold border-b border-b-neutral-800">
         {/* TAB 1: FOR YOU */}
         <div className="flex-1 flex justify-center px-4 pt-4 hover:bg-[#181818]">
           <button
@@ -46,13 +52,13 @@ const Homepage = () => {
       </div>
       
       <div className="border-b border-neutral-800">
-        <Share />
+        <Share onPostCreated={handlePostCreated} />
       </div>
       
       {/* Tab Content */}
       {activeTab === "for-you" && (
         <div>
-          {/* Add posts feed here later */}
+          <PostsFeed refreshKey={refreshKey} />
         </div>
       )}
       
