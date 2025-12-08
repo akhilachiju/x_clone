@@ -5,10 +5,11 @@ import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    console.log('Comments API called with postId:', params.id);
+    const { id } = await params;
+    console.log('Comments API called with postId:', id);
     
     const session = await getServerSession(authOptions);
     console.log('Session:', session?.user?.email);
@@ -21,7 +22,7 @@ export async function POST(
     const { body } = await request.json();
     console.log('Comment body:', body);
     
-    const postId = params.id;
+    const postId = id;
 
     if (!body) {
       console.log('No body provided');

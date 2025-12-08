@@ -1,4 +1,5 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { AiOutlineClose } from "react-icons/ai";
 import Image from "next/image";
 
@@ -8,6 +9,7 @@ interface ModalProps {
   children: React.ReactNode;
   title?: string;
   showLogo?: boolean;
+  showCloseButton?: boolean;
   className?: string;
 }
 
@@ -17,26 +19,42 @@ export default function UnifiedModal({
   children, 
   title,
   showLogo = false,
+  showCloseButton = true,
   className = "" 
 }: ModalProps) {
   const handleClose = useCallback(() => {
     onClose();
   }, [onClose]);
 
+  // Hide body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70">
-      <div className="fixed inset-0 backdrop-blur-sm" onClick={handleClose}></div>
+  const modalContent = (
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div className="fixed inset-0" onClick={handleClose}></div>
       <div className={`relative bg-black border border-neutral-800 rounded-2xl w-full max-w-lg mx-4 ${className}`}>
         {(title || showLogo) && (
-          <div className="flex items-center justify-center p-6 relative">
-            <button
-              onClick={handleClose}
-              className="absolute left-6 p-2 rounded-full hover:bg-neutral-800 text-white transition"
-            >
-              <AiOutlineClose size={20} />
-            </button>
+          <div className="flex items-center justify-center p-2 relative">
+            {showCloseButton && (
+              <button
+                onClick={handleClose}
+                className="absolute left-6 p-2 rounded-full hover:bg-neutral-800 text-white transition"
+              >
+                <AiOutlineClose size={20} />
+              </button>
+            )}
             
             {showLogo && (
               <div className="w-8 h-8">
@@ -62,4 +80,7 @@ export default function UnifiedModal({
       </div>
     </div>
   );
+
+  // Render modal at document body level using portal
+  return createPortal(modalContent, document.body);
 }

@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { signOut, useSession } from "next-auth/react";
-import { BiLogOut } from "react-icons/bi";
 import toast from "react-hot-toast";
 import Avatar from "../ui/Avatar";
+import UnifiedModal from "../ui/UnifiedModal";
 import { useProfile } from "@/hooks/useProfile";
 import { usePathname } from "next/navigation";
 
@@ -14,7 +14,22 @@ const LeftBar = () => {
   const { data: session } = useSession();
   const { image: profileImage, name: profileName, username } = useProfile();
   const [notificationCount, setNotificationCount] = useState(0);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const pathname = usePathname();
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowUserMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     const fetchNotificationCount = async () => {
@@ -51,6 +66,14 @@ const LeftBar = () => {
   }, [pathname]);
 
   const displayName = profileName || session?.user?.name || "User";
+
+  const handleLogout = () => {
+    toast.success('Logged out successfully');
+    setTimeout(() => {
+      signOut();
+    }, 500);
+    setShowLogoutModal(false);
+  };
 
   const handleHomeClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -133,19 +156,6 @@ const LeftBar = () => {
               </Link>
             )
           ))}
-          {/* LOGOUT */}
-          <button
-            onClick={() => {
-              toast.success('Logged out successfully');
-              setTimeout(() => {
-                signOut();
-              }, 500);
-            }}
-            className="p-2 rounded-full hover:bg-[#181818] flex items-center gap-4"
-          >
-            <BiLogOut size={28} />
-            <span className="hidden xl:inline text-xl">Logout</span>
-          </button>
         </div>
         {/* BUTTON */}
         <Link
@@ -162,21 +172,90 @@ const LeftBar = () => {
         </Link>
       </div>
       {/* USER */}
-      <div className="flex items-center justify-between xl:justify-start w-full rounded-full hover:bg-[#181818] p-2">
-        <div className="flex items-center gap-2">
-          <Avatar 
-            src={profileImage} 
-            alt={displayName || "User"}
-            fallbackText={displayName?.charAt(0)}
-            className="bg-gray-600"
-          />
-          <div className="hidden xl:flex flex-col">
-            <span className="font-bold">{displayName}</span>
-            <span className="text-sm text-neutral-500">@{username || session?.user?.email?.split('@')[0]}</span>
+      <div className="relative" ref={menuRef}>
+        <button
+          onClick={() => setShowUserMenu(!showUserMenu)}
+          className="flex items-center justify-between xl:justify-start w-full rounded-full hover:bg-[#181818] p-2"
+        >
+          <div className="flex items-center gap-2">
+            <Avatar 
+              src={profileImage} 
+              alt={displayName || "User"}
+              fallbackText={displayName?.charAt(0)}
+              className="bg-gray-600"
+            />
+            <div className="hidden xl:flex flex-col">
+              <span className="font-bold text-left">{displayName}</span>
+              <span className="text-sm text-neutral-500 text-left">@{username || session?.user?.email?.split('@')[0]}</span>
+            </div>
+          </div>
+          <div className="hidden xl:block cursor-pointer font-bold pl-10">...</div>
+        </button>
+
+        {/* User Menu Dropdown */}
+        {showUserMenu && (
+          <div className="absolute bottom-full left-0 mb-2 bg-black border border-neutral-600 rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.8)] min-w-[280px] py-2 z-50">
+            <button
+              onClick={() => {
+                setShowUserMenu(false);
+                // Add existing account functionality here
+              }}
+              className="w-full px-4 py-3 text-left hover:bg-neutral-800 transition-colors text-white font-medium"
+            >
+              Add an existing account
+            </button>
+            
+            <button
+              onClick={() => {
+                setShowUserMenu(false);
+                setShowLogoutModal(true);
+              }}
+              className="w-full px-4 py-3 text-left hover:bg-neutral-800 transition-colors text-white font-medium"
+            >
+              Log out @{username || session?.user?.email?.split('@')[0]}
+            </button>
+            
+            {/* Arrow pointer */}
+            <div className="absolute top-full left-1/2 transform -translate-x-1/2">
+              <div className="w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-neutral-600"></div>
+              <div className="w-0 h-0 border-l-7 border-r-7 border-t-7 border-l-transparent border-r-transparent border-t-black absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-px"></div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Logout Modal */}
+      <UnifiedModal 
+        isOpen={showLogoutModal} 
+        onClose={() => setShowLogoutModal(false)}
+        showLogo={true}
+        showCloseButton={false}
+        className="max-w-xs w-80"
+      >
+        <div className="px-6 py-0.5">
+          <h3 className="text-xl font-bold mb-2 text-white text-left">Log out of X?</h3>
+          
+          <p className="text-neutral-400 text-sm mb-6 leading-relaxed text-left">
+            You can always log back in at any time. If you just want to switch accounts, you can do that by adding an existing account.
+          </p>
+          
+          <div className="space-y-3">
+            <button
+              onClick={handleLogout}
+              className="w-full bg-white text-black rounded-full py-2.5 font-bold hover:bg-neutral-200 transition-colors"
+            >
+              Log out
+            </button>
+            
+            <button
+              onClick={() => setShowLogoutModal(false)}
+              className="w-full bg-black border border-neutral-600 text-white rounded-full py-2.5 font-bold hover:bg-neutral-900 transition-colors"
+            >
+              Cancel
+            </button>
           </div>
         </div>
-        <div className="hidden xl:block cursor-pointer font-bold pl-10">...</div>
-      </div>
+      </UnifiedModal>
     </div>
   );
 };

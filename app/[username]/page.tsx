@@ -2,7 +2,6 @@
 
 import { useSession } from "next-auth/react";
 import { useState, use, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import ProfileHeader from "@/components/profile/ProfileHeader";
 import ProfileContent from "@/components/profile/ProfileContent";
 import ProfileInfo from "@/components/profile/ProfileInfo";
@@ -24,23 +23,14 @@ interface ProfilePageProps {
   params: Promise<{
     username: string;
   }>;
-  activeTab?: string;
 }
 
-export default function UserProfile({ params, activeTab: propActiveTab }: ProfilePageProps) {
+export default function UserProfile({ params }: ProfilePageProps) {
   const { username } = use(params);
   const { data: session } = useSession();
-  const [activeTab, setActiveTab] = useState(propActiveTab || "Posts");
+  const [activeTab, setActiveTab] = useState("Posts");
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
-
-  // Redirect to /posts if on base profile URL
-  useEffect(() => {
-    if (!propActiveTab) {
-      router.replace(`/${username}/posts`);
-    }
-  }, [propActiveTab, username, router]);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -59,11 +49,9 @@ export default function UserProfile({ params, activeTab: propActiveTab }: Profil
     }
   }, [username]);
 
-  // Separate useEffect for profile update listener
   useEffect(() => {
     const handleProfileUpdate = () => {
       if (session?.user?.email?.split('@')[0] === username) {
-        // Only refetch if this is the current user's profile
         const fetchUser = async () => {
           try {
             const userData = await fetchUserByUsername(username);
@@ -80,8 +68,6 @@ export default function UserProfile({ params, activeTab: propActiveTab }: Profil
       const customEvent = event as CustomEvent<{ userId: string; isFollowing: boolean }>;
       const { userId } = customEvent.detail;
       
-      // Refetch user data when follow state changes to update counts
-      // Check if the followed user is the one whose profile we're viewing
       if (user?.id === userId) {
         const fetchUser = async () => {
           try {
@@ -104,20 +90,20 @@ export default function UserProfile({ params, activeTab: propActiveTab }: Profil
     };
   }, [username, session?.user?.email, user?.id]);
 
-  // Loading state
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+  };
+
   if (loading) {
     return <div className="p-8 text-center text-neutral-500">Loading...</div>;
   }
 
-  // User not found
   if (!user) {
     return <div className="p-8 text-center text-neutral-500">User not found</div>;
   }
 
-  // Check if viewing own profile
   const isOwnProfile = user.email === session?.user?.email;
 
-  // Require login to view profiles
   if (!session?.user?.email) {
     return <div className="p-8 text-center text-neutral-500">Please log in to view profiles</div>;
   }
@@ -133,7 +119,12 @@ export default function UserProfile({ params, activeTab: propActiveTab }: Profil
         user={user}
       />
       
-      <ProfileTabs activeTab={activeTab} isOwnProfile={isOwnProfile} username={username} />
+      <ProfileTabs 
+        activeTab={activeTab} 
+        isOwnProfile={isOwnProfile} 
+        username={username}
+        onTabChange={handleTabChange}
+      />
       
       <ProfileContent activeTab={activeTab} user={user} isOwnProfile={isOwnProfile} />
     </div>

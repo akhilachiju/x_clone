@@ -41,3 +41,9 @@ yarn-error.log*
 next-env.d.ts
 
 /app/generated/prisma
+
+# uploads
+/public/uploads/profiles/*
+/public/uploads/covers/*
+/public/uploads/posts/*
+!/public/uploads/*/.gitkeep
