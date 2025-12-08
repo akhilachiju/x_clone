@@ -6,6 +6,8 @@ import { HiCamera } from "react-icons/hi";
 import { IoClose } from "react-icons/io5";
 import Modal from "../ui/Modal";
 import CameraOverlay from "../ui/CameraOverlay";
+import axios from 'axios';
+import toast from 'react-hot-toast';
 
 interface EditProfileModalProps {
   isOpen: boolean;
@@ -24,11 +26,10 @@ export default function EditProfileModal({ isOpen, onClose, onSave, initialValue
   const [bio, setBio] = useState('');
   const [profileImage, setProfileImage] = useState('');
   const [coverImage, setCoverImage] = useState('');
+  const [uploading, setUploading] = useState(false);
 
-  // Reset form when modal opens with new values
   useEffect(() => {
     if (isOpen) {
-      // Use setTimeout to avoid synchronous setState
       setTimeout(() => {
         setName(initialValues.name || '');
         setBio(initialValues.bio || '');
@@ -38,7 +39,6 @@ export default function EditProfileModal({ isOpen, onClose, onSave, initialValue
     }
   }, [isOpen, initialValues.name, initialValues.bio, initialValues.avatarUrl, initialValues.coverImage]);
 
-  // Reset form when modal closes
   const handleClose = () => {
     setName(initialValues.name || '');
     setBio(initialValues.bio || '');
@@ -47,25 +47,44 @@ export default function EditProfileModal({ isOpen, onClose, onSave, initialValue
     onClose();
   };
 
-  const handleProfileImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setProfileImage(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
+  const uploadFile = async (file: File, type: 'profile' | 'cover') => {
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('type', type);
+
+      const response = await axios.post('/api/upload', formData);
+      return response.data.url;
+    } catch (error) {
+      toast.error('Upload failed');
+      throw error;
+    } finally {
+      setUploading(false);
     }
   };
 
-  const handleCoverImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleProfileImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setCoverImage(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
+      try {
+        const url = await uploadFile(file, 'profile');
+        setProfileImage(url);
+      } catch (error) {
+        console.error('Profile image upload failed:', error);
+      }
+    }
+  };
+
+  const handleCoverImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      try {
+        const url = await uploadFile(file, 'cover');
+        setCoverImage(url);
+      } catch (error) {
+        console.error('Cover image upload failed:', error);
+      }
     }
   };
 
@@ -88,8 +107,9 @@ export default function EditProfileModal({ isOpen, onClose, onSave, initialValue
           </button>
           <h2 className="text-white text-xl font-bold flex-1">Edit profile</h2>
           <button
-            className="bg-white text-black rounded-full px-4 py-1.5 font-bold hover:bg-neutral-200 transition-colors"
+            className="bg-white text-black rounded-full px-4 py-1.5 font-bold hover:bg-neutral-200 transition-colors disabled:opacity-50"
             onClick={handleSave}
+            disabled={uploading}
           >
             Save
           </button>
@@ -111,9 +131,9 @@ export default function EditProfileModal({ isOpen, onClose, onSave, initialValue
             onChange={handleCoverImageChange}
             className="hidden"
             id="cover-upload"
+            disabled={uploading}
           />
           
-          {/* Camera Icon - Always visible */}
           <label
             htmlFor="cover-upload"
             className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 -ml-6 cursor-pointer"
@@ -123,7 +143,6 @@ export default function EditProfileModal({ isOpen, onClose, onSave, initialValue
             </CameraOverlay>
           </label>
 
-          {/* Delete Icon - Only when image exists */}
           {coverImage && (
             <button
               onClick={() => setCoverImage('')}
@@ -162,6 +181,7 @@ export default function EditProfileModal({ isOpen, onClose, onSave, initialValue
               onChange={handleProfileImageChange}
               className="hidden"
               id="profile-upload"
+              disabled={uploading}
             />
             <label
               htmlFor="profile-upload"
@@ -176,7 +196,6 @@ export default function EditProfileModal({ isOpen, onClose, onSave, initialValue
 
         {/* Form Fields */}
         <div className="px-4 pb-6 space-y-6">
-          {/* Name Field */}
           <div className="relative">
             <input
               type="text"
@@ -193,7 +212,6 @@ export default function EditProfileModal({ isOpen, onClose, onSave, initialValue
             </div>
           </div>
 
-          {/* Bio Field */}
           <div className="relative">
             <textarea
               value={bio}
@@ -210,6 +228,12 @@ export default function EditProfileModal({ isOpen, onClose, onSave, initialValue
             </div>
           </div>
         </div>
+
+        {uploading && (
+          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+            <div className="text-white">Uploading...</div>
+          </div>
+        )}
     </Modal>
   );
 }

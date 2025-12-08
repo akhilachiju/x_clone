@@ -1,54 +1,40 @@
-import { NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
+import { getAuthenticatedUserFromSession, handleApiRequest, createErrorResponse } from '@/lib/apiUtils';
 import prisma from '@/lib/prismadb';
-import { handleApiError } from '@/lib/errorHandler';
-import { getAuthenticatedUser } from '@/lib/authUtils';
 
 export async function POST(
-  request: Request,
-  { params }: { params: { id: string } }
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
-    const session = await getAuthenticatedUser();
-
-    if (!session?.user?.email) {
-      return new NextResponse("Unauthorized", { status: 401 });
-    }
-
-    const postId = params.id;
-
-    const currentUser = await prisma.user.findUnique({
-      where: { email: session.user.email }
-    });
-
-    if (!currentUser) {
-      return new NextResponse("User not found", { status: 404 });
-    }
+  return handleApiRequest(async () => {
+    const { id } = await params;
+    const { user } = await getAuthenticatedUserFromSession();
 
     const post = await prisma.post.findUnique({
-      where: { id: postId }
+      where: { id },
     });
 
     if (!post) {
-      return new NextResponse("Post not found", { status: 404 });
+      throw new Error('Post not found');
     }
 
-    let updatedLikedIds = [...(post.likedIds || [])];
-
-    if (updatedLikedIds.includes(currentUser.id)) {
-      // Unlike
-      updatedLikedIds = updatedLikedIds.filter((likedId) => likedId !== currentUser.id);
-    } else {
-      // Like
-      updatedLikedIds.push(currentUser.id);
-    }
+    const likedIds = post.likedIds || [];
+    const isLiked = likedIds.includes(user.id);
+    
+    const updatedLikedIds = isLiked 
+      ? likedIds.filter(id => id !== user.id)
+      : [...likedIds, user.id];
 
     const updatedPost = await prisma.post.update({
-      where: { id: postId },
-      data: { likedIds: updatedLikedIds }
+      where: { id },
+      data: { likedIds: updatedLikedIds },
     });
 
-    return NextResponse.json(updatedPost);
-  } catch (error) {
-    return handleApiError(error);
-  }
+    return {
+      success: true,
+      isLiked: !isLiked,
+      likedIds: updatedPost.likedIds,
+      likeCount: updatedPost.likedIds.length,
+    };
+  });
 }

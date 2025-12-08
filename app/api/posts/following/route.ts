@@ -21,7 +21,7 @@ export async function GET() {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Get posts from followed users
+    // Get posts from followed users with same structure as main posts API
     const posts = await prisma.post.findMany({
       where: {
         userId: {
@@ -34,9 +34,24 @@ export async function GET() {
             id: true,
             name: true,
             username: true,
-            image: true
-          }
-        }
+            image: true,
+          },
+        },
+        comments: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                username: true,
+                image: true,
+              },
+            },
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+        },
       },
       orderBy: {
         createdAt: 'desc'
