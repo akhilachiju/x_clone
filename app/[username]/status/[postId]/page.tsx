@@ -1,7 +1,7 @@
 import Link from "next/link";
 import prisma from "@/lib/prismadb";
 import Post from "@/components/feed/Post";
-import Comments from "@/components/Comments";
+import Comments from "@/components/feed/Comments";
 
 interface PostPageProps {
   params: Promise<{

@@ -11,6 +11,7 @@ import EditProfileModal from "../model/EditProfileModal";
 import UnfollowModal from "../model/UnfollowModal";
 import FollowButton from "../ui/FollowButton";
 import IconButton from "../ui/IconButton";
+import { getUserAvatarId, getColorFromId } from "@/lib/avatarUtils";
 import { useUnfollowModal } from "@/hooks/useUnfollowModal";
 
 interface User {
@@ -94,6 +95,8 @@ export default function ProfileInfo({ displayName, displayUsername, isOwnProfile
     }
     return colors[Math.abs(hash) % colors.length];
   };
+
+  const avatarUserId = getUserAvatarId(session, user);
 
   const handleFollow = async () => {
     if (!user?.id) return;
@@ -229,7 +232,7 @@ export default function ProfileInfo({ displayName, displayUsername, isOwnProfile
       <div className="relative px-4 pb-4">
       {/* Profile Picture */}
       <div className="absolute -top-16 left-4 border-4 border-black rounded-full w-32 h-32 overflow-hidden">
-        <div className={`w-full h-full flex items-center justify-center ${profileData.profileImage ? "bg-gray-600" : getRandomColor(user?.id || "default")}`}>
+        <div className={`w-full h-full flex items-center justify-center ${profileData.profileImage ? "bg-gray-600" : getColorFromId(avatarUserId)}`}>
           {profileData.profileImage ? (
             <Image
               src={profileData.profileImage}

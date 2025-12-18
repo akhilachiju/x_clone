@@ -1,73 +1,56 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prismadb';
-import { handleApiError } from '@/lib/errorHandler';
 
 export async function POST() {
   try {
-    // Fetch dummy posts from external API
+    // Clear existing data
+    await prisma.post.deleteMany({});
+    await prisma.user.deleteMany({});
+    
+    // Fetch from correct DummyJSON API
     const response = await fetch('https://dummyjson.com/posts');
     const data = await response.json();
     
-    // Fetch users data for names
-    const usersResponse = await fetch('https://dummyjson.com/users');
-    const usersData = await usersResponse.json();
+    console.log(`Fetched ${data.posts.length} posts from DummyJSON`);
+
+    // Get unique user IDs from posts
+    const userIds = [...new Set(data.posts.map((post: any) => post.userId))];
     
-    // Check existing dummy posts in DB
-    const existingPosts = await prisma.post.findMany({
-      where: {
-        id: {
-          startsWith: 'dummy_'
-        }
-      }
-    });
-
-    const existingPostIds = new Set(existingPosts.map(p => p.id));
-    let newPostsCount = 0;
-
-    // Create dummy users with original data
-    const dummyUsers = [];
-    for (const apiUser of usersData.users) {
-      const user = await prisma.user.upsert({
-        where: { email: `${apiUser.username}@dummy.com` },
-        update: {},
-        create: {
-          email: `${apiUser.username}@dummy.com`,
-          name: `${apiUser.firstName} ${apiUser.lastName}`,
-          username: apiUser.username,
-          bio: apiUser.company?.title || 'Dummy user',
+    // Create dummy users for each userId
+    const userIdMap = new Map();
+    for (const userId of userIds) {
+      const user = await prisma.user.create({
+        data: {
+          email: `user${userId}@dummy.com`,
+          name: `User ${userId}`,
+          username: `user${userId}`,
         }
       });
-      dummyUsers.push({ ...user, originalId: apiUser.id });
+      userIdMap.set(userId, user.id);
     }
 
-    // Add new posts with original data
-    for (const apiPost of data.posts) {
-      const postId = `dummy_${apiPost.id}`;
-      
-      if (!existingPostIds.has(postId)) {
-        const originalUser = dummyUsers.find(u => u.originalId === apiPost.userId);
-        
+    // Create posts with exact DummyJSON data
+    for (const post of data.posts) {
+      const userId = userIdMap.get(post.userId);
+      if (userId) {
         await prisma.post.create({
           data: {
-            id: postId,
-            body: apiPost.body,
-            userId: originalUser?.id || dummyUsers[0].id,
-            createdAt: new Date(Date.now() - (newPostsCount * 1800000)),
-            // Store original data as JSON in a custom field or use existing fields
-            likedIds: Array(apiPost.reactions?.likes || 0).fill('dummy_like'),
+            body: post.body,
+            userId: userId,
           }
         });
-        
-        newPostsCount++;
       }
     }
 
     return NextResponse.json({ 
-      message: `Synced dummy posts with original data`,
-      newPosts: newPostsCount,
-      totalExisting: existingPosts.length
+      message: `Synced ${data.posts.length} posts from DummyJSON`,
+      posts: data.posts.length,
+      users: userIds.length
     });
   } catch (error) {
-    return handleApiError(error);
+    console.error('Sync error:', error);
+    return NextResponse.json({ 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    }, { status: 500 });
   }
 }

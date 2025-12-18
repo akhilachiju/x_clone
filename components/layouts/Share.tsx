@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useSession } from "next-auth/react";
 import Avatar from "../ui/Avatar";
 import { useProfile } from "@/hooks/useProfile";
+import { getUserAvatarId } from "@/lib/avatarUtils";
 import axios from "axios";
 import toast from "react-hot-toast";
 
@@ -38,7 +39,7 @@ const Share = ({ onPostCreated }: { onPostCreated?: () => void }) => {
         src={profileImage} 
         alt={session?.user?.name || "User"}
         fallbackText={session?.user?.name?.charAt(0)}
-        className="bg-gray-600"
+        userId={getUserAvatarId(session)}
       />
 
       {/* INPUT + ACTIONS */}

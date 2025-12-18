@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import { signIn } from "next-auth/react";
 import { toast } from "react-hot-toast";
+import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import Input from "../ui/Input";
 import useModal from "@/hooks/useModal";
 import Modal from "./AuthModal";
@@ -12,6 +13,7 @@ const LoginModal = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const onToggle = useCallback(() => {
     if (isLoading) return;
@@ -60,13 +62,23 @@ const LoginModal = () => {
         value={email}
         disabled={isLoading}
       />
-      <Input
-        placeholder="Password"
-        type="password"
-        onChange={(e) => setPassword(e.target.value)}
-        value={password}
-        disabled={isLoading}
-      />
+      <div className="relative">
+        <Input
+          placeholder="Password"
+          type={showPassword ? "text" : "password"}
+          onChange={(e) => setPassword(e.target.value)}
+          value={password}
+          disabled={isLoading}
+        />
+        <button
+          type="button"
+          onClick={() => setShowPassword(!showPassword)}
+          disabled={isLoading}
+          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-400 hover:text-white transition disabled:cursor-not-allowed"
+        >
+          {showPassword ? <AiOutlineEyeInvisible size={20} /> : <AiOutlineEye size={20} />}
+        </button>
+      </div>
     </div>
   );
 
