@@ -22,11 +22,13 @@ export function useProfile() {
           const response = await fetch('/api/profile');
           if (response.ok) {
             const userData = await response.json();
-            setProfileData({
-              image: userData.image || '',
-              name: userData.name || '',
-              username: userData.username || session.user.email?.split('@')[0] || ''
-            });
+            if (userData) {
+              setProfileData({
+                image: userData.image || '',
+                name: userData.name || '',
+                username: userData.username || session.user.email?.split('@')[0] || ''
+              });
+            }
           }
         } catch (error) {
           console.error('Failed to fetch profile:', error);

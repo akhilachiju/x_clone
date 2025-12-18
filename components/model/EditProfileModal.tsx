@@ -6,6 +6,8 @@ import { HiCamera } from "react-icons/hi";
 import { IoClose } from "react-icons/io5";
 import Modal from "../ui/Modal";
 import CameraOverlay from "../ui/CameraOverlay";
+import { getUserAvatarId, getColorFromId } from "@/lib/avatarUtils";
+import { useSession } from "next-auth/react";
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
@@ -22,11 +24,15 @@ interface EditProfileModalProps {
 }
 
 export default function EditProfileModal({ isOpen, onClose, onSave, initialValues }: EditProfileModalProps) {
+  const { data: session } = useSession();
   const [name, setName] = useState('');
   const [bio, setBio] = useState('');
   const [profileImage, setProfileImage] = useState('');
   const [coverImage, setCoverImage] = useState('');
   const [uploading, setUploading] = useState(false);
+
+  const avatarUserId = getUserAvatarId(session);
+  const avatarBgColor = getColorFromId(avatarUserId);
 
   useEffect(() => {
     if (isOpen) {
@@ -168,7 +174,7 @@ export default function EditProfileModal({ isOpen, onClose, onSave, initialValue
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full bg-gray-600 flex items-center justify-center">
+                <div className={`w-full h-full ${avatarBgColor} flex items-center justify-center`}>
                   <span className="text-white font-bold text-3xl">
                     {name?.charAt(0)?.toUpperCase() || 'U'}
                   </span>

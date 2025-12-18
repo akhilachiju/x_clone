@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prismadb';
 import { handleApiError } from '@/lib/errorHandler';
-import { getAuthenticatedUser } from '@/lib/authUtils';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
 export async function GET() {
   try {
+    console.log('Fetching posts...');
+    
     const posts = await prisma.post.findMany({
       include: {
         user: {
@@ -32,19 +35,21 @@ export async function GET() {
         },
       },
       orderBy: {
-        createdAt: 'desc', // Latest posts first
+        createdAt: 'desc',
       },
     });
 
+    console.log(`Found ${posts.length} posts`);
     return NextResponse.json(posts);
   } catch (error) {
+    console.error('Posts API Error:', error);
     return handleApiError(error);
   }
 }
 
 export async function POST(request: Request) {
   try {
-    const session = await getAuthenticatedUser();
+    const session = await getServerSession(authOptions);
 
     if (!session?.user?.email) {
       return new NextResponse("Unauthorized", { status: 401 });
@@ -89,7 +94,12 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const session = await getAuthenticatedUser();
+    const session = await getServerSession(authOptions);
+    
+    if (!session?.user?.email) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const postId = searchParams.get('id');
 

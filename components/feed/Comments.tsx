@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import Avatar from "./ui/Avatar";
+import Avatar from "../ui/Avatar";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { formatDistanceToNow } from "date-fns";
@@ -31,7 +31,7 @@ export default function Comments({ postId, comments, postOwnerUsername }: Commen
   const { data: session } = useSession();
   const [comment, setComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<{ profileImage?: string; username: string } | null>(null);
   const router = useRouter();
 
   // Fetch current user data to get profile image
@@ -64,8 +64,8 @@ export default function Comments({ postId, comments, postOwnerUsername }: Commen
       setComment("");
       toast.success("Reply posted!");
       router.refresh();
-    } catch (error: any) {
-      console.error('Comment error:', error.response?.data || error.message);
+    } catch (error: unknown) {
+      console.error('Comment error:', error instanceof Error ? error.message : 'Unknown error');
       toast.error("Failed to post reply");
     } finally {
       setIsSubmitting(false);
@@ -82,7 +82,7 @@ export default function Comments({ postId, comments, postOwnerUsername }: Commen
           </div>
           <form onSubmit={handleSubmit} className="flex gap-4">
             <Avatar 
-              src={currentUser?.image || session.user?.image || null} 
+              src={currentUser?.profileImage || session.user?.image || null} 
               alt={session.user?.name || "User"}
               fallbackText={session.user?.name?.charAt(0)}
             />

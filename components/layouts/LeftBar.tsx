@@ -8,6 +8,7 @@ import toast from "react-hot-toast";
 import Avatar from "../ui/Avatar";
 import UnifiedModal from "../ui/UnifiedModal";
 import { useProfile } from "@/hooks/useProfile";
+import { getUserAvatarId } from "@/lib/avatarUtils";
 import { usePathname } from "next/navigation";
 
 const LeftBar = () => {
@@ -182,7 +183,7 @@ const LeftBar = () => {
               src={profileImage} 
               alt={displayName || "User"}
               fallbackText={displayName?.charAt(0)}
-              className="bg-gray-600"
+              userId={getUserAvatarId(session)}
             />
             <div className="hidden xl:flex flex-col">
               <span className="font-bold text-left">{displayName}</span>
